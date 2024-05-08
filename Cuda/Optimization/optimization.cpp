@@ -238,7 +238,7 @@ bool checkTolerance(const Child& ind, const cudaConstants* cConstants) {
 
 //Function that gets a new state for the individual
 //  Compares all possible actions and randomly chooses either a random action or the best action and returns the new state based on that action
-State getNextState(const cudaConstants* cConstants, const Child & ind, std::mt19937_64 & rng) {
+std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, const Child & ind, std::mt19937_64 & rng) {
     //Get possible actions
     std::vector<std::string> possActions = ind.curState.getPossibleActions(cConstants);
 
@@ -247,15 +247,60 @@ State getNextState(const cudaConstants* cConstants, const Child & ind, std::mt19
 
     //Fill the nextstates vector based on the possible actions
     for (int i = 0; i < possActions.size(); i++){
-        nextSates.append(ind.curState.getNewState(possActions[i]));
+        nextStates.append(ind.curState.getNewState(possActions[i]));
     }
+
+    //Array which will hold the output state
+    std::array<int, OPTIM_VARS> outputState;
 
     //Generate random value to see if the selected next state is random or the max value
     float stateType = rng() / rng.max;
+
+    //See if the next state should be a random or best state
+    if (stateType > cConstants->epsilon){
+        //Get the max value state
+        //index with the max nextState val
+        int max = 0;
+        //For loop to compare the rest of the next state values
+        for (int i = 1; i < nextStates.size(); i++) {
+            if (ind.curState.values[nextStates[i]] > ind.curState.values[nextStates[max]]) {
+                max = i;
+            }
+        }
+
+        //Assign the max value state
+        outputState = nextStates[max];
+    }
+    else {
+        //Get a random state
+        float randState = rng() % nextStates.size();
+
+        //Assign the random state
+        outputState = nextState[randState];
+    }
+
+    return outputState;
     
 }
 
-void update_q_values(Child & ind)
+//update value for current state, get the next state --> loop this --> optimization loop, checking tolerance
+
+//we have simulated the new state, the spacecraft has moved to the new state, and we update the q-value of the previous state
+//prevState is basically the key for the previous state
+void update_q_values(const cudaConstants* cConstants, Child & ind, const std::array<int, OPTIM_VARS>& prevState){
+    //we want the reward to be how close to the target the individual is
+    double reward = ind.progress;
+
+    //sample = reward + self.discount *self.getValue(nextState);
+
+    //takes the known reward and any known information about the value of the function at the next state to update the value at the current state
+    double sample = reward + cConstants->gamma*ind.curState.values[ind.curState.stateParams]; //is max actually defined 
+
+    //self.Q_values_curr[(state, action)] = (1-self.alpha)*self.getQValue(state, action) + self.alpha*sample
+
+    //then find the new Q estimate from the current one 
+    ind.curState.values[prevState] = (1 - cConstants->alpha)*ind.curState.values[prevState] + cConstants->alpha*sample;
+}
 
 //Function that will facilitate the process of finding an optimal flight path
 double optimize(const cudaConstants* cConstants) {
@@ -342,9 +387,16 @@ double optimize(const cudaConstants* cConstants) {
         // newGeneration(oldAdults, newAdults, currentAnneal, generation, rng, cConstants, gpuValues);
 
         //TODO: use function to get possible actions then get the value of the adjacent actions
+        std:array<int, OPTIM_VARS> newState = getNextState(cConstants, individual, rng);
 
+        //Save the previous state and update the child's state with the new state
+        std:array<int, OPTIM_VARS> prevState = individual.curState.stateParams;
+        individual.curState.stateParams = newState;
+
+        //TODO: sim here to get progress
         
         //TODO: (possibly in the last func) choose either the best or a random next state
+        update_q_values(cConstants, individual, prevState);
         
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE PREP PARENTS-_-_-_-_-_-_-_-_-_\n\n";
         //fill oldAdults with the best adults from this generation and the previous generation so that the best parents can be selected (numErrors is for all adults in the generation - the oldAdults and the newAdults)
@@ -355,8 +407,6 @@ double optimize(const cudaConstants* cConstants) {
         //oldAdults goes in with the pool of potential parents that may have generated the newAdults
         //      by the end of the function, it is filled with the best num_individuals adults from allAdults (sorted by rankDistanceSort) 
         //preparePotentialParents(allAdults, newAdults, oldAdults, numErrors, duplicateNum, cConstants, rng, refPoints, generation, currentAnneal, marsErrors);
-
-        //TODO: Create function to get the value of the next state (run simulation)
 
 
         // Display a '.' to the terminal to show that a generation has been performed
@@ -382,7 +432,7 @@ double optimize(const cudaConstants* cConstants) {
 
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE RECORD-_-_-_-_-_-_-_-_-_\n\n";
         //Print out necessary info for this generation
-        genOutputs.printGeneration(cConstants, allAdults, objectiveAvgValues, generation, currentAnneal, numErrors, duplicateNum, totAssoc, minSteps, avgSteps, maxSteps, minDistance, avgDistance, maxDistance, avgAge, generation-oldestBirthday, avgBirthday, oldestBirthday, (totRunTime.count()/(generation+1)));
+        // genOutputs.printGeneration(cConstants, allAdults, objectiveAvgValues, generation, currentAnneal, numErrors, duplicateNum, totAssoc, minSteps, avgSteps, maxSteps, minDistance, avgDistance, maxDistance, avgAge, generation-oldestBirthday, avgBirthday, oldestBirthday, (totRunTime.count()/(generation+1)));
 
         // Before replacing new adults, determine whether all are within tolerance
         // Determines when loop is finished
@@ -400,7 +450,7 @@ double optimize(const cudaConstants* cConstants) {
 
     //TODO: fix
     //Handle the final printing
-    genOutputs.printFinalGen(cConstants, allAdults, gpuValues, convergence, generation, numErrors, duplicateNum, oldestBirthday, (totRunTime.count()/(generation+1))); 
+    // genOutputs.printFinalGen(cConstants, allAdults, gpuValues, convergence, generation, numErrors, duplicateNum, oldestBirthday, (totRunTime.count()/(generation+1))); 
 
     return calcPerS;
 }

@@ -52,7 +52,7 @@ Child::Child(State initState, const cudaConstants* cConstants) {
 // Input: Another child
 // Output: this child is a copy of the other child that was passed in
 Child:: Child(const Child& other){
-    curState = other.cusState;
+    curState = other.curState;
     finalPos = other.finalPos;
     posDiff = other.posDiff; 
     speedDiff = other.speedDiff;

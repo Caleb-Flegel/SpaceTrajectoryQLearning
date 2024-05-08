@@ -35,9 +35,9 @@ struct cudaConstants {
 
     // Scalars used to modify the mutate_scales below, used to assist in making adults mutate more if needed
     // A value of 1 will have an individual's parameters mutate at the scale of the variables below
-    double alpha;
-    double epsilon;
-    double gamma; 
+    double alpha; //learning rate
+    double epsilon; //exploration probability
+    double gamma; //discount
 
     // The number of breaks between the minimum and maximum values
     int num_increments; 
