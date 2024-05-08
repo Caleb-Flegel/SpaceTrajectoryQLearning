@@ -17,26 +17,26 @@ Child::Child() {
 //         genCreated - the generation this child is created, used for birthday/age data
 //         calcAvgParentProgress - the creating parent's average progress. Will be set to 0 for randomly generated children
 // Output: this individual's startParams.y0 is set to the initial position and velocity of the spacecraft
-Child::Child(rkParameters<double> & childParameters, const cudaConstants* cConstants, int genCreated, double calcAvgParentProgress) {
+Child::Child(State initState, const cudaConstants* cConstants) {
 
-    startParams = childParameters;
-    elements<double> earth = launchCon->getCondition(startParams.tripTime); //get Earth's position and velocity at launch
+    curState = initState;
+    // elements<double> earth = launchCon->getCondition(startParams.tripTime); //get Earth's position and velocity at launch
 
-    startParams.y0 = elements<double>( // calculate the starting position and velocity of the spacecraft from Earth's position and velocity and spacecraft launch angles
-        earth.r+ESOI*cos(startParams.alpha),
-        earth.theta+asin(sin(M_PI-startParams.alpha)*ESOI/earth.r),
-        earth.z, // The spacecraft Individual is set to always be in-plane (no initial Z offset relative to earth) 
-        earth.vr+cos(startParams.zeta)*sin(startParams.beta)*cConstants->v_escape, 
-        earth.vtheta+cos(startParams.zeta)*cos(startParams.beta)*cConstants->v_escape,
-        earth.vz+sin(startParams.zeta)*cConstants->v_escape);
+    // startParams.y0 = elements<double>( // calculate the starting position and velocity of the spacecraft from Earth's position and velocity and spacecraft launch angles
+    //     earth.r+ESOI*cos(startParams.alpha),
+    //     earth.theta+asin(sin(M_PI-startParams.alpha)*ESOI/earth.r),
+    //     earth.z, // The spacecraft Individual is set to always be in-plane (no initial Z offset relative to earth) 
+    //     earth.vr+cos(startParams.zeta)*sin(startParams.beta)*cConstants->v_escape, 
+    //     earth.vtheta+cos(startParams.zeta)*cos(startParams.beta)*cConstants->v_escape,
+    //     earth.vz+sin(startParams.zeta)*cConstants->v_escape);
 
     errorStatus = NOT_RUN; //not run through callRK yet
     simStatus = INITIAL_SIM; //Has not been simulated yet
 
-    birthday = genCreated; //Set the child's birthday to the current generation
+    // birthday = genCreated; //Set the child's birthday to the current generation
 
-    avgParentProgress = calcAvgParentProgress; //The avg progress of the creating parents, if any (0 for randomly generated children)
-    normalizedObj = std::vector<double>(cConstants->missionObjectives.size(), 0); //Resize the objective progress vector to match the number of objectives and set the default progress to be 0 (bad value)
+    // avgParentProgress = calcAvgParentProgress; //The avg progress of the creating parents, if any (0 for randomly generated children)
+    // normalizedObj = std::vector<double>(cConstants->missionObjectives.size(), 0); //Resize the objective progress vector to match the number of objectives and set the default progress to be 0 (bad value)
     objTargetDiffs = std::vector<double>(cConstants->missionObjectives.size(), 0); //Resize the objective difference vector to match the number of objectives and set the default progress to be 0 (bad value)
 
     stepCount = 0; //no calculations done yet, default is zero
@@ -52,7 +52,7 @@ Child::Child(rkParameters<double> & childParameters, const cudaConstants* cConst
 // Input: Another child
 // Output: this child is a copy of the other child that was passed in
 Child:: Child(const Child& other){
-    startParams = other.startParams;
+    curState = other.cusState;
     finalPos = other.finalPos;
     posDiff = other.posDiff; 
     speedDiff = other.speedDiff;
@@ -63,10 +63,10 @@ Child:: Child(const Child& other){
     orbitSpeedDiff = other.orbitSpeedDiff; 
     errorStatus = other.errorStatus;
     simStatus = other.simStatus;
-    birthday = other.birthday;
-    avgParentProgress = other.avgParentProgress;
+    // birthday = other.birthday;
+    // avgParentProgress = other.avgParentProgress;
     progress = other.progress;
-    normalizedObj = other.normalizedObj;
+    // normalizedObj = other.normalizedObj;
     objTargetDiffs = other.objTargetDiffs;
     stepCount = other.stepCount;
     minMarsDist = other.minMarsDist;

@@ -43,6 +43,23 @@
 #define TRIPTIME_OFFSET (  ZETA_OFFSET + 1)           // TRIPTIME follows ZETA
 #define COAST_OFFSET    (TRIPTIME_OFFSET + 1)         // COAST follows TRIPTIME
 
+// Individual offset variables for state calculations
+#define GAMMA0_OFFSET (GAMMA_OFFSET + 0)
+#define GAMMA1_OFFSET (GAMMA_OFFSET + 1)
+#define GAMMA2_OFFSET (GAMMA_OFFSET + 2)
+#define GAMMA3_OFFSET (GAMMA_OFFSET + 3)
+#define GAMMA4_OFFSET (GAMMA_OFFSET + 4)
+#define GAMMA5_OFFSET (GAMMA_OFFSET + 5)
+#define GAMMA6_OFFSET (GAMMA_OFFSET + 6)
+#define   TAU0_OFFSET (TAU_OFFSET + 0)
+#define   TAU1_OFFSET (TAU_OFFSET + 1)
+#define   TAU2_OFFSET (TAU_OFFSET + 2)
+#define COAST0_OFFSET (COAST_OFFSET + 0)
+#define COAST1_OFFSET (COAST_OFFSET + 1)
+#define COAST2_OFFSET (COAST_OFFSET + 2)
+#define COAST3_OFFSET (COAST_OFFSET + 3)
+#define COAST4_OFFSET (COAST_OFFSET + 4)
+
 // OPTIM_VARS = Number of variables (array sizes plus 4 for alpha, beta, zeta, and triptime)
 #define OPTIM_VARS (GAMMA_ARRAY_SIZE + TAU_ARRAY_SIZE + COAST_ARRAY_SIZE + 4)
 
@@ -54,11 +71,11 @@
 //Enumeration used to determine genetic algorithm method
 //  Rank-distance is better for missions with <= 2 objectives and rank-rarity is better for all other missions
 //  This enumeration will determine which genetic algorithm functions arr called
-enum GENETIC_ALGORITHM {
-    UNSPECIFIED = 0,
-    RANK_DISTANCE = 1,
-    RANK_RARITY = 2,
-};
+// enum GENETIC_ALGORITHM {
+//     UNSPECIFIED = 0,
+//     RANK_DISTANCE = 1,
+//     RANK_RARITY = 2,
+// };
 
 //status values used for child and adult that tell us if it is a nan and what kind of nan error it is
 //    Addresses complicated communication from the GPU process that previously was paying attention only to NANs

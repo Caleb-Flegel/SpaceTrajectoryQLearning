@@ -16,14 +16,7 @@ struct cudaConstants {
     double time_seed;    // Seed used for randomization within optimize function, if it's set to NONE the seed is set to time(0)
     int max_generations; // Maximum number of generations to evaluate in the genetic algorithm if not reaching a solution
     int run_count;       // How many runs of the optimization algorithm to perform using incremental seeds to not just repeat the same value (the actual change in the seed occurs in main)
-    int carryover_individuals; //How many individuals from the previous run to use as basis for starting parameters for this run
     bool record_mode;    // If set to true, functions that record information onto files such as genPerformance.csv.  The code still records a valid solution regardless of this setting
-
-    //Determines the genetic algorithm used
-    GENETIC_ALGORITHM algorithm;
-
-    int divisions;          // The number of divisions for each objective when calculating reference points
-    int reservedRarity = 0; // The number of top rarity scores to reserve for the best individuals
 
     //Variables used in orbit missions to determine the desired final orbital radius and speed
     //They are initially set to -1 to allow the program to quickly determine if the goal is an orbit vs an impact/rendezvous
@@ -32,39 +25,43 @@ struct cudaConstants {
 
     double MSOI_scale; //This will modify how large the base MSOI is scaled, used in determining when an individual enters a SOI 
 
-    int write_freq;       // Generations between calling recordGenerationPerformance() method (defined in Output_Funcs/output.cpp)
-    int all_write_freq;   // Generations between calling recordAllIndividuals() method (defined in Output_Funcs/output.cpp)
+    int write_freq;       // Generations between calling genPerformance() method (defined in Output_Funcs/output.cpp)
     int disp_freq;        // Generations between calling terminalDisplay() method (defined in Output_Funcs/output.cpp)
 
-    int best_count;        // Number of individuals that needs to be within the acceptable condition before ending the algorithm, also how many of the top individuals are recorded
-    double anneal_initial; // initial value for annealing, meant to replace the previously used calculation involving ANNEAL_MIN and ANNEAL_MAX with something more simple
-    double anneal_final;   // final value for annealing, anneal cannot be reduced beyond this point
+    // double anneal_initial; // initial value for annealing, meant to replace the previously used calculation involving ANNEAL_MIN and ANNEAL_MAX with something more simple
+    // double anneal_final;   // final value for annealing, anneal cannot be reduced beyond this point
 
-    double mutation_amplitude; // Percentage for probability of mutating a gene in a new individual, called iteratively to mutate more genes until the check fails
+    // double mutation_amplitude; // Percentage for probability of mutating a gene in a new individual, called iteratively to mutate more genes until the check fails
 
     // Scalars used to modify the mutate_scales below, used to assist in making adults mutate more if needed
     // A value of 1 will have an individual's parameters mutate at the scale of the variables below
-    double default_mutation_chance; 
-    
-    // Used in mutate(), affects the scale of change for the respective parameter values, in conjunction with annealing
-    // Represents max bounds of mutation, mutation will never be +/- this value
-    double gamma_mutate_scale; 
-    double tau_mutate_scale; 
-    double coast_mutate_scale;
-    double triptime_mutate_scale;
-    double zeta_mutate_scale;
-    double beta_mutate_scale;
-    double alpha_mutate_scale;
+    double alpha;
+    double epsilon;
+    double gamma; 
 
-    // Used when random_start==true, is the max magnitude of the random parameter initial values (ranges from -value to +value)
-    double gamma_random_start_range; // Sets all coefficients within the range
-    double tau_random_start_range;
-    double coast_random_start_range;
-    double triptime_max; // Explicit bounds for valid triptime, impacts not just an individual's parameters but also range of EarthInfo's calculations regardless of random_start setting
-    double triptime_min; // Explicit bounds for valid triptime, impacts not just an individual's parameters but also range of EarthInfo's calculations regardless of random_start setting
-    double alpha_random_start_range;
-    double beta_random_start_range; // For beta, only positive side of the range is used (0 to the value assigned)
-    double zeta_random_start_range;
+    // The number of breaks between the minimum and maximum values
+    int num_increments; 
+
+    // Store the min and max sim values in arrays
+    int minSimVals[OPTIM_VARS];
+    int maxSimVals[OPTIM_VARS];
+
+    // Start ranges for each value
+    // double gamma_min; // Sets all coefficients within the range
+    // double gamma_max; // Sets all coefficients within the range
+    // double tau_min;
+    // double tau_max; 
+    // double coast_min;
+    // double coast_max;
+    // double triptime_min; // Explicit bounds for valid triptime, impacts not just an individual's parameters but also range of EarthInfo's calculations regardless of random_start setting
+    // double triptime_max; // Explicit bounds for valid triptime, impacts not just an individual's parameters but also range of EarthInfo's calculations regardless of random_start setting
+    // double alpha_min;
+    // double alpha_max;
+    // double beta_min; // For beta, only positive side of the range is used (0 to the value assigned)
+    // double beta_max;
+    // double zeta_min;
+    // double zeta_max;
+    // Note: the increment values for each input variable will be calculated on the fly
 
     // Used in thruster construction and corresponding calculations
     int thruster_type; // 0 is for no thruster, 1 is for NEXT ion thruster
@@ -103,13 +100,13 @@ struct cudaConstants {
     double vtheta_fin_mars; // AU/s
     double vz_fin_mars;     // AU/s
 
-    double rk_tol;       // The relative/absolute (not sure which one it is) tolerance for the runge kutta algorithm
+    double rk_tol;           // The relative/absolute (not sure which one it is) tolerance for the runge kutta algorithm
     double doublePrecThresh; // The smallest allowed double value for runge-kutta
     int min_numsteps;    // Minimum number of steps in runge kutta 
     int max_numsteps;    // Maximum number of steps in runge kutta 
-    int num_individuals; // Number of individuals in the pool, each individual contains its own thread
-    int survivor_count;  // Number of survivors selected, every pair of survivors creates some amount of new individuals
-    int thread_block_size; // Semi-fixed value, GPU harware-dependent. Size of the GPU thread blocks, used when launching the GPU kernel
+    // int num_individuals; // Number of individuals in the pool, each individual contains its own thread
+    // int survivor_count;  // Number of survivors selected, every pair of survivors creates some amount of new individuals
+    // int thread_block_size; // Semi-fixed value, GPU harware-dependent. Size of the GPU thread blocks, used when launching the GPU kernel
 
     //(seconds) Used in generating time range for Earth calculations , distance between explicit time intervals stored
     int timeRes;

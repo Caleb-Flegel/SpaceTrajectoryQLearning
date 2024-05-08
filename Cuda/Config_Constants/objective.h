@@ -55,7 +55,7 @@ struct objective {
     //  This determines when the program will/will not prioritize better values
     //      If two individuals compared in a domination check have parameter values better than the goal difference,
     //          the parameter will not be considered for domination
-    double goalDifference; 
+    // double goalDifference; 
 
     //equateTolerance determines the differentiation needed for two parameters to be considered not equal
     //  this is primarily a floating point comparison issue
@@ -67,7 +67,7 @@ struct objective {
     //Constructor that accepts the information for an objective, should be the only constructor used
     //    Should only be called when the mission.config file is parsed/loaded
     objective(std::string _name, parameterGoals _goal, double _target, double _allowedDiff, double _goalDiff, double _equateTolerance):
-        name(_name), goal(_goal), target(_target), allowedDifference(_allowedDiff), goalDifference(_goalDiff), equateTolerance(_equateTolerance) {}
+        name(_name), goal(_goal), target(_target), allowedDifference(_allowedDiff), equateTolerance(_equateTolerance) {}
 };
 
 #endif

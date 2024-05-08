@@ -11,7 +11,7 @@
 cudaConstants::cudaConstants() {
     //Set initial algorithm state to unspecified
     //  If the user specifies an algorithm, it will be set from the genetic.config file read
-    algorithm = UNSPECIFIED;
+    // algorithm = UNSPECIFIED;
 
     // Get values from the genetic config file
     FileRead("../Config_Constants/genetic.config");
@@ -22,30 +22,30 @@ cudaConstants::cudaConstants() {
     FileRead("../Config_Constants/" + this->destination);
 
     //Check if there was no algorithm specified
-    if (algorithm == UNSPECIFIED) {
-        //Set the algorithm based on the number of objectives
-        if (missionObjectives.size() > 2) {
-            //Rank rarity is best for missions with many objectives
-            std::cout << "\nAutomatically setting algorithm to rank-rarity.\n";
-            algorithm = RANK_RARITY;
-        }
-        else {
-            //Rank rarity is best for missions with few objectives
-            std::cout << "\nAutomatically setting algorithm to rank-distance.\n";
-            algorithm = RANK_DISTANCE;
-        }
-    }
+    // if (algorithm == UNSPECIFIED) {
+    //     //Set the algorithm based on the number of objectives
+    //     if (missionObjectives.size() > 2) {
+    //         //Rank rarity is best for missions with many objectives
+    //         std::cout << "\nAutomatically setting algorithm to rank-rarity.\n";
+    //         algorithm = RANK_RARITY;
+    //     }
+    //     else {
+    //         //Rank rarity is best for missions with few objectives
+    //         std::cout << "\nAutomatically setting algorithm to rank-distance.\n";
+    //         algorithm = RANK_DISTANCE;
+    //     }
+    // }
 
     //If time mutation scale is not set, set it to the difference between triptime max and min
-    if (this->triptime_mutate_scale < this->doublePrecThresh) {
-        //std::cout << "\nTEST: setting triptime mutate scale to difference\n";
-        this->triptime_mutate_scale = (this->triptime_max - this->triptime_min);
-    }
+    // if (this->triptime_mutate_scale < this->doublePrecThresh) {
+    //     //std::cout << "\nTEST: setting triptime mutate scale to difference\n";
+    //     this->triptime_mutate_scale = (this->triptime_max - this->triptime_min);
+    // }
 
     //If time mutation scale is not set, set it to the difference between triptime max and min
-    if (this->carryover_individuals > this->num_individuals) {
-        this->carryover_individuals = 0;
-    }
+    // if (this->carryover_individuals > this->num_individuals) {
+    //     this->carryover_individuals = 0;
+    // }
 
     // Now that dry_mass and fuel_mass have been acquired, derive wet_mass
     this->wet_mass = this->dry_mass + this->fuel_mass;
@@ -124,9 +124,9 @@ void cudaConstants::FileRead(std::string fileName) {
                     else if (variableName == "run_count") {
                         this->run_count = std::stoi(variableValue);
                     }
-                    else if (variableName == "carryover_individuals") {
-                        this->carryover_individuals = std::stoi(variableValue);
-                    }
+                    // else if (variableName == "carryover_individuals") {
+                    //     this->carryover_individuals = std::stoi(variableValue);
+                    // }
 
 
 //////////////////////////////////////////////////////////////////////// -- RUNGE KUTTA -- /////////////////////////////////////////////////////////////////////////////
@@ -145,15 +145,15 @@ void cudaConstants::FileRead(std::string fileName) {
 
 
 //////////////////////////////////////////////////////////////////// -- POOL & THREAD BLOCK -- /////////////////////////////////////////////////////////////////////////
-                    else if (variableName == "num_individuals") {
-                        this->num_individuals = std::stoi(variableValue);
-                    }
-                    else if (variableName == "survivor_count") {
-                        this->survivor_count = std::stoi(variableValue);
-                    }
-                    else if (variableName == "thread_block_size") {
-                        this->thread_block_size = std::stoi(variableValue);
-                    }
+                    // else if (variableName == "num_individuals") {
+                    //     this->num_individuals = std::stoi(variableValue);
+                    // }
+                    // else if (variableName == "survivor_count") {
+                    //     this->survivor_count = std::stoi(variableValue);
+                    // }
+                    // else if (variableName == "thread_block_size") {
+                    //     this->thread_block_size = std::stoi(variableValue);
+                    // }
 
 
 ////////////////////////////////////////////////////////////////////////// -- OUTPUT -- /////////////////////////////////////////////////////////////////////////////////
@@ -170,9 +170,9 @@ void cudaConstants::FileRead(std::string fileName) {
                     else if (variableName == "write_freq") {
                         this->write_freq = std::stoi(variableValue);
                     }
-                    else if (variableName == "all_write_freq") {
-                        this->all_write_freq = std::stoi(variableValue);
-                    }
+                    // else if (variableName == "all_write_freq") {
+                    //     this->all_write_freq = std::stoi(variableValue);
+                    // }
                     else if (variableName == "disp_freq") {
                         this->disp_freq = std::stoi(variableValue);
                     }
@@ -203,82 +203,120 @@ void cudaConstants::FileRead(std::string fileName) {
                     }
 
 
-////////////////////////////////////////////////////////////////////// -- GENETIC ALGORITHM -- ///////////////////////////////////////////////////////////////////////////
-                    else if (variableName == "algorithm_type") {
-                        //Assign the algorithm type based on the user input
-                        if (variableValue == "rank-rarity") {
-                            this->algorithm = RANK_RARITY;
-                            std::cout << "\nRank-Rarity algorithm specified\n";
-                        }
-                        else if (variableValue == "rank-distance") {
-                            this->algorithm = RANK_DISTANCE;
-                            std::cout << "\nRank-Distance algorithm specified\n";
-                        }
-                        else {
-                            std::cout << "\nAlgorithm selection unidentified\n";
-                        }
+////////////////////////////////////////////////////////////////////// -- ALGORITHM -- ///////////////////////////////////////////////////////////////////////////
+                    // else if (variableName == "algorithm_type") {
+                    //     //Assign the algorithm type based on the user input
+                    //     if (variableValue == "rank-rarity") {
+                    //         this->algorithm = RANK_RARITY;
+                    //         std::cout << "\nRank-Rarity algorithm specified\n";
+                    //     }
+                    //     else if (variableValue == "rank-distance") {
+                    //         this->algorithm = RANK_DISTANCE;
+                    //         std::cout << "\nRank-Distance algorithm specified\n";
+                    //     }
+                    //     else {
+                    //         std::cout << "\nAlgorithm selection unidentified\n";
+                    //     }
+                    // }
+                    else if (variableName == "alpha") {
+                        this->alpha = std::stod(variableValue);
                     }
-                    else if (variableName == "alpha_random_start_range") {
-                        this->alpha_random_start_range = std::stod(variableValue);
+                    else if (variableName == "epsilon") {
+                        this->epsilon = std::stod(variableValue);
                     }
-                    else if (variableName == "beta_random_start_range") {
-                        this->beta_random_start_range = std::stod(variableValue);
+                    else if (variableName == "gamma") {
+                        this->gamma = std::stod(variableValue);
                     }
-                    else if (variableName == "zeta_random_start_range") {
-                        this->zeta_random_start_range = std::stod(variableValue);
+
+                    else if (variableName == "num_increments") {
+                        this->num_increments = std::stod(variableValue);
                     }
-                    else if (variableName == "triptime_max") {
-                        this->triptime_max = std::stod(variableValue) * SECONDS_IN_YEAR;
+
+                    else if (variableName == "alpha_min") {
+                        this->minSimVals;
+                    }
+                    else if (variableName == "alpha_max") {
+                        this->alpha_max = std::stod(variableValue);
+                    }
+                    else if (variableName == "beta_min") {
+                        this->beta_min = std::stod(variableValue);
+                    }
+                    else if (variableName == "beta_max") {
+                        this->beta_max = std::stod(variableValue);
+                    }
+                    else if (variableName == "zeta_min") {
+                        this->zeta_min = std::stod(variableValue);
+                    }
+                    else if (variableName == "zeta_max") {
+                        this->zeta_max = std::stod(variableValue);
+                    }
+                    else if (variableName == "zeta_min") {
+                        this->zeta_min = std::stod(variableValue);
+                    }
+                    else if (variableName == "zeta_max") {
+                        this->zeta_max = std::stod(variableValue);
                     }
                     else if (variableName == "triptime_min") {
                         this->triptime_min = std::stod(variableValue) * SECONDS_IN_YEAR;
                     }
-                    else if (variableName == "gamma_random_start_range") {
-                        this->gamma_random_start_range = std::stod(variableValue);
+                    else if (variableName == "triptime_max") {
+                        this->triptime_max = std::stod(variableValue) * SECONDS_IN_YEAR;
                     }
-                    else if (variableName == "tau_random_start_range") {
-                        this->tau_random_start_range = std::stod(variableValue);
+                    else if (variableName == "gamma_min") {
+                        this->gamma_min = std::stod(variableValue);
                     }
-                    else if (variableName == "coast_random_start_range") {
-                        this->coast_random_start_range = std::stod(variableValue);
+                    else if (variableName == "gamma_max") {
+                        this->gamma_max = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau_min") {
+                        this->tau_min = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau_max") {
+                        this->tau_max = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast_min") {
+                        this->coast_min = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast_max") {
+                        this->coast_max = std::stod(variableValue);
                     }
 
-                    else if (variableName == "mutation_amplitude") {
-                        this->mutation_amplitude = std::stod(variableValue);
-                    }
+                    // else if (variableName == "mutation_amplitude") {
+                    //     this->mutation_amplitude = std::stod(variableValue);
+                    // }
 
-                    else if (variableName == "default_mutation_chance") {
-                        this->default_mutation_chance = std::stod(variableValue);
-                    }
+                    // else if (variableName == "default_mutation_chance") {
+                    //     this->default_mutation_chance = std::stod(variableValue);
+                    // }
 
 
-                    else if (variableName == "gamma_mutate_scale") {
-                        this->gamma_mutate_scale = std::stod(variableValue);
-                    }
-                    else if (variableName == "tau_mutate_scale") {
-                        this->tau_mutate_scale = std::stod(variableValue);
-                    }
-                    else if (variableName == "coast_mutate_scale") {
-                        this->coast_mutate_scale = std::stod(variableValue);
-                    }
-                    else if (variableName == "triptime_mutate_scale") {
-                        this->triptime_mutate_scale = std::stod(variableValue) * SECONDS_IN_YEAR;
-                    }
-                    else if (variableName == "zeta_mutate_scale") {
-                        this->zeta_mutate_scale = std::stod(variableValue);
-                    }
-                    else if (variableName == "beta_mutate_scale") {
-                        this->beta_mutate_scale = std::stod(variableValue);
-                    }
-                    else if (variableName == "alpha_mutate_scale") {
-                        this->alpha_mutate_scale = std::stod(variableValue);
-                    }
-                    else if (variableName == "anneal_initial") {
-                        this->anneal_initial = std::stod(variableValue);
-                    }
-                    else if (variableName == "anneal_final") {
-                        this->anneal_final = std::stod(variableValue);
-                    }
+                    // else if (variableName == "gamma_mutate_scale") {
+                    //     this->gamma_mutate_scale = std::stod(variableValue);
+                    // }
+                    // else if (variableName == "tau_mutate_scale") {
+                    //     this->tau_mutate_scale = std::stod(variableValue);
+                    // }
+                    // else if (variableName == "coast_mutate_scale") {
+                    //     this->coast_mutate_scale = std::stod(variableValue);
+                    // }
+                    // else if (variableName == "triptime_mutate_scale") {
+                    //     this->triptime_mutate_scale = std::stod(variableValue) * SECONDS_IN_YEAR;
+                    // }
+                    // else if (variableName == "zeta_mutate_scale") {
+                    //     this->zeta_mutate_scale = std::stod(variableValue);
+                    // }
+                    // else if (variableName == "beta_mutate_scale") {
+                    //     this->beta_mutate_scale = std::stod(variableValue);
+                    // }
+                    // else if (variableName == "alpha_mutate_scale") {
+                    //     this->alpha_mutate_scale = std::stod(variableValue);
+                    // }
+                    // else if (variableName == "anneal_initial") {
+                    //     this->anneal_initial = std::stod(variableValue);
+                    // }
+                    // else if (variableName == "anneal_final") {
+                    //     this->anneal_final = std::stod(variableValue);
+                    // }
 
 /////////////////////////////////////////////////////////////////////////// -- OTHER -- //////////////////////////////////////////////////////////////////////////////////
                     else if (variableName == "timeRes") {
@@ -304,12 +342,6 @@ void cudaConstants::FileRead(std::string fileName) {
                     }
                     else if (variableName == "coast_threshold") {
                         this->coast_threshold = std::stod(variableValue);
-                    }
-                    else if (variableName == "divisions") {
-                        this->divisions = std::stoi(variableValue);
-                    }
-                    else if (variableName == "reservedRarity") {
-                        this->reservedRarity = std::stoi(variableValue);
                     }
 
 
@@ -409,7 +441,7 @@ void cudaConstants::importObjective(std::string line) {
     //temp storage variables that will be used to create the new objective object
     std::string name;
     parameterGoals goal; 
-    double target, allowedDiff, goalDiff, equateTolerance; 
+    double target, allowedDiff, equateTolerance; 
 
     //Temp string will assist with eliminating spaces from the line and identifying the goal
     std::string tempStr; 
@@ -503,13 +535,6 @@ void cudaConstants::importObjective(std::string line) {
     //Get the domination threshold from the last substring
     allowedDiff = std::stod(line.substr(beginningPivot, endPivot - beginningPivot + 1));
 
-    //Find the next pivot point for the domination tolerance
-    beginningPivot = endPivot+1;
-    endPivot = line.find(",", beginningPivot);
-    
-    //Get the domination threshold from the last substring
-    goalDiff = std::stod(line.substr(beginningPivot, endPivot - beginningPivot + 1));
-
     //Find the last pivot points
     beginningPivot = endPivot+1; 
     endPivot = line.size(); 
@@ -546,9 +571,8 @@ std::ostream& operator<<(std::ostream& os, const cudaConstants& object) {
     os << std::setprecision(12);
     os << "\n==========CONFIG=DATA===============================================================================\n";
     os << "Genetic Algorithm Related Values:\n";
-    os << "\ttime_seed: "       << object.time_seed       << "\tnum_divisions: "    << object.divisions         << "\talgorithm: "          << object.algorithm         << "\n";
-    os << "\tnum_individuals: " << object.num_individuals << "\tsurvivor_count: "   << object.survivor_count    << "\tthread_block_size: "  << object.thread_block_size << "\n";
-    os << "\tbest_count: "      << object.best_count      << "\tmax_generations: "  << object.max_generations   << "\trun_count: "          << object.run_count         << "\n\n";
+    os << "\ttime_seed: "       << object.time_seed       << "\n";
+    os << "\tmax_generations: "  << object.max_generations   << "\trun_count: "          << object.run_count         << "\n\n";
 
     os << "Runge-Kutta Related Values:\n";
     os << "\trk_tol: "       << object.rk_tol       << "\tdoublePrecThresh: " << object.doublePrecThresh << "\ttimeRes: "   << object.timeRes    << "\n";
@@ -557,16 +581,16 @@ std::ostream& operator<<(std::ostream& os, const cudaConstants& object) {
     os << "Output Variables:\n";
     os << "\trecord_mode: " << object.record_mode << "\twrite_freq: " << object.write_freq << "\tdisp_freq: " << object.disp_freq << "\n\n";
 
-    os << "Random Start Range Values:\n";
-    os << "\tgamma: "        << object.gamma_random_start_range << "\ttau: "  << object.tau_random_start_range  << "\tcoast: " << object.coast_random_start_range << "\n";
-    os << "\talpha: "        << object.alpha_random_start_range << "\tbeta: " << object.beta_random_start_range << "\tzeta: "  << object.zeta_random_start_range  << "\n";
-    os << "\ttriptime min: " << object.triptime_min             << "\tmax: "  << object.triptime_max            << "\n\n";
+    // os << "Random Start Range Values:\n";
+    // os << "\tgamma: "        << object.gamma_random_start_range << "\ttau: "  << object.tau_random_start_range  << "\tcoast: " << object.coast_random_start_range << "\n";
+    // os << "\talpha: "        << object.alpha_random_start_range << "\tbeta: " << object.beta_random_start_range << "\tzeta: "  << object.zeta_random_start_range  << "\n";
+    // os << "\ttriptime min: " << object.triptime_min             << "\tmax: "  << object.triptime_max            << "\n\n";
     
-    os << "Mutation & Scales:\n";
-    os << "\tmutation_amplitude: " << object.mutation_amplitude     << "\tanneal_initial: " << object.anneal_initial    << "\n";
-    os << "\tgamma_scale: "        << object.gamma_mutate_scale     << "\ttau_m_scale: "    << object.tau_mutate_scale  << "\tcoast_m_scale: " << object.coast_mutate_scale << "\n";
-    os << "\talpha_m_scale: "      << object.alpha_mutate_scale     << "\tbeta_m_scale: "   << object.beta_mutate_scale << "\tzeta_m_scale: "  << object.zeta_mutate_scale  << "\n";
-    os << "\ttriptime_m_scale: "   << object.triptime_mutate_scale  << "\n\n";
+    // os << "Mutation & Scales:\n";
+    // os << "\tmutation_amplitude: " << object.mutation_amplitude     << "\tanneal_initial: " << object.anneal_initial    << "\n";
+    // os << "\tgamma_scale: "        << object.gamma_mutate_scale     << "\ttau_m_scale: "    << object.tau_mutate_scale  << "\tcoast_m_scale: " << object.coast_mutate_scale << "\n";
+    // os << "\talpha_m_scale: "      << object.alpha_mutate_scale     << "\tbeta_m_scale: "   << object.beta_mutate_scale << "\tzeta_m_scale: "  << object.zeta_mutate_scale  << "\n";
+    // os << "\ttriptime_m_scale: "   << object.triptime_mutate_scale  << "\n\n";
 
     os << "Spacecraft Info:\n";
     os << "\tdry_mass: " << object.dry_mass << "\t\tfuel_mass: " << object.fuel_mass << "\t\twet_mass: " << object.wet_mass << "\n";

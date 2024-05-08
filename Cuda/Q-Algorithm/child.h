@@ -4,6 +4,7 @@
 #include "../Runge_Kutta/rkParameters.h"
 #include "../Planet_calculations/planetInfo.h"
 #include "../Config_Constants/constants.h"
+#include "../Q-Algorithm/state.h"
 
 //TODO: Big step: think about where in the code we rely on numeric data to determine errors (like checking for NAN)
 
@@ -16,7 +17,7 @@
 // Child is a structure member of the genetic algorithm's population and has set of input and output parameters
 // once a child is created it will then be copied to an adult with some added parameters
 struct Child {
-    rkParameters<double> startParams; // input parameters for the run- the unique identifiers of this individual
+    State curState; // The child's current state
 
     elements<double> finalPos; // final position of the spacecraft at end of a simulation
 
@@ -40,12 +41,12 @@ struct Child {
     //Normalization for each output/objective for the child. The size of the vector will be the same as the number of objectives
     //  The objecitves of the individual will be compared to those of the other individuals in the generation
     //  Cost is a 0 to 1 scale, with 0 being being best
-    std::vector<double> normalizedObj; 
+    // std::vector<double> normalizedObj; 
 
     double progress; //progress of the individual's combined outputs. 0 to 1 scale with 0 being poor and 1 meaning that the individual have completed all objectives
-    double avgParentProgress; //The average of the two parents progress
+    // double avgParentProgress; //The average of the two parents progress
 
-    int birthday; //keeps track of the generation this individual was created in 
+    // int birthday; //keeps track of the generation this individual was created in 
 
     int stepCount; //counts steps in callRK, needed for orbital missions to keep track of steps
     int simStartTime; //Tracks the time from end of mission that the child needs to be simulated from. This is used to simulate children specifically within spheres of influence
@@ -73,7 +74,7 @@ struct Child {
     //         calcAvgParentProgress - the creating parent's average progress. Will be set to 0 for randomly generated children
     // Output: this individual's startParams.y0 is set to the initial position and velocity of the spacecraft
     //         Child is ready to be passed into callRK
-    Child(rkParameters<double> & childParameters, const cudaConstants* cConstants, int genCreated, double calcAvgParentProgress);
+    Child(State initState, const cudaConstants* cConstants);
 
     // Copy constructor
     // Sets this child's parameters, elements, posDiff, and speedDiff to another child's values for these quantities
