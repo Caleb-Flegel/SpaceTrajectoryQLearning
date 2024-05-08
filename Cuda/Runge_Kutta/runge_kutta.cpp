@@ -299,10 +299,11 @@ void callRK(Child individual, double absTolInput, const cudaConstants* cConstant
 //void callRK(const int numThreads, const int blockThreads, Child *generation, double timeInitial, double stepSize, double absTol, double & calcPerS, const cudaConstants* cConstant, PlanetInfo *marsLaunchCon) {
 void callRK(Child individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) {
 
-    //is this bad?
+    //which (if any) of these do we need to reset here?
     individual.simStatus = INITIAL_SIM;
     individual.errorStatus = NOT_RUN;
-    // individual.startTime = 0;
+    individual.startTime = 0;
+    individual.stepCount = 0;
     
     double stepSize = (cConstant->triptime_min - timeInitial)/cConstant->max_numsteps;
     
@@ -340,6 +341,13 @@ void callRK(Child individual, double absTolInput, const cudaConstants* cConstant
 
     //Get progress now that all of the outputs are ready
     individual.getProgress(cConstant);
+        
+}
+
+// Called by optimize() in optimization.cu
+// This should be used when we don't need a MATLAB output
+void callRK(Child individual, double absTolInput, const cudaConstants* cConstant, double timeInitial) {
+    callRK(individual, absTolInput, cConstant, [], [], [], [], [], [], [], timeInitial); //this doesn't work? what should i be doing
         
 }
 
