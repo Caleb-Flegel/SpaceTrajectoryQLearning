@@ -233,52 +233,46 @@ void cudaConstants::FileRead(std::string fileName) {
                     }
 
                     else if (variableName == "alpha_min") {
-                        this->minSimVals;
+                        this->minSimVals[ALPHA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "alpha_max") {
-                        this->alpha_max = std::stod(variableValue);
+                        this->maxSimVals[ALPHA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "beta_min") {
-                        this->beta_min = std::stod(variableValue);
+                        this->minSimVals[BETA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "beta_max") {
-                        this->beta_max = std::stod(variableValue);
+                        this->maxSimVals[BETA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "zeta_min") {
-                        this->zeta_min = std::stod(variableValue);
+                       this->minSimVals[ZETA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "zeta_max") {
-                        this->zeta_max = std::stod(variableValue);
-                    }
-                    else if (variableName == "zeta_min") {
-                        this->zeta_min = std::stod(variableValue);
-                    }
-                    else if (variableName == "zeta_max") {
-                        this->zeta_max = std::stod(variableValue);
+                        this->maxSimVals[ZETA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "triptime_min") {
-                        this->triptime_min = std::stod(variableValue) * SECONDS_IN_YEAR;
+                        this->minSimVals[TRIPTIME_OFFSET] = std::stod(variableValue); * SECONDS_IN_YEAR;
                     }
                     else if (variableName == "triptime_max") {
-                        this->triptime_max = std::stod(variableValue) * SECONDS_IN_YEAR;
+                        this->maxSimVals[TRIPTIME_OFFSET] = std::stod(variableValue); * SECONDS_IN_YEAR;
                     }
                     else if (variableName == "gamma_min") {
-                        this->gamma_min = std::stod(variableValue);
+                        this->minSimVals[GAMMA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "gamma_max") {
-                        this->gamma_max = std::stod(variableValue);
+                        this->maxSimVals[GAMMA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "tau_min") {
-                        this->tau_min = std::stod(variableValue);
+                        this->minSimVals[TAU_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "tau_max") {
-                        this->tau_max = std::stod(variableValue);
+                        this->maxSimVals[TAU_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "coast_min") {
-                        this->coast_min = std::stod(variableValue);
+                        this->minSimVals[COAST_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "coast_max") {
-                        this->coast_max = std::stod(variableValue);
+                        this->maxSimVals[COAST_OFFSET] = std::stod(variableValue);
                     }
 
                     // else if (variableName == "mutation_amplitude") {

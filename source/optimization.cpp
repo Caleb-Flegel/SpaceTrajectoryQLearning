@@ -394,6 +394,8 @@ double optimize(const cudaConstants* cConstants) {
         individual.curState.stateParams = newState;
 
         //TODO: sim here to get progress
+        timeInitial = 0;
+        callRK(individual, cConstants->rk_tol, cConstants, marsLaunchCon, timeInitial);
         
         //TODO: (possibly in the last func) choose either the best or a random next state
         update_q_values(cConstants, individual, prevState);

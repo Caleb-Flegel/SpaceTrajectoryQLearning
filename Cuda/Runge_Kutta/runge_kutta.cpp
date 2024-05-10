@@ -297,7 +297,7 @@ void callRK(Child individual, double absTolInput, const cudaConstants* cConstant
 
 // Called by optimize() in optimization.cu
 //void callRK(const int numThreads, const int blockThreads, Child *generation, double timeInitial, double stepSize, double absTol, double & calcPerS, const cudaConstants* cConstant, PlanetInfo *marsLaunchCon) {
-void callRK(Child individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) {
+void callRK(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) {
 
     //which (if any) of these do we need to reset here?
     individual.simStatus = INITIAL_SIM;
@@ -346,13 +346,19 @@ void callRK(Child individual, double absTolInput, const cudaConstants* cConstant
 
 // Called by optimize() in optimization.cu
 // This should be used when we don't need a MATLAB output
-void callRK(Child individual, double absTolInput, const cudaConstants* cConstant, double timeInitial) {
-    callRK(individual, absTolInput, cConstant, [], [], [], [], [], [], [], timeInitial); //this doesn't work? what should i be doing
+void callRK(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double timeInitial) {
+    std::vector<double> time_steps;
+    std::vector<elements<double>> y_steps;
+    std::vector<double> gamma_steps; 
+    std::vector<double> tau_steps; 
+    std::vector<double> accel_steps;
+    std::vector<double> fuel_steps;
+    callRK(individual, absTolInput, cConstant, marsLaunchCon, time_steps, y_steps, gamma_steps, tau_steps, accel_steps, fuel_steps, timeInitial); //this doesn't work? what should i be doing
         
 }
 
 // seperate conditions are passed for each thread, but timeInitial, stepSize, and absTol are the same for every thread
-void rk4CPUSim(Child individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps) {
+void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps) {
    
     // individual.simNum++;
     //Check if this child has been simulated already
