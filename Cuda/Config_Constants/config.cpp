@@ -251,10 +251,10 @@ void cudaConstants::FileRead(std::string fileName) {
                         this->maxSimVals[ZETA_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "triptime_min") {
-                        this->minSimVals[TRIPTIME_OFFSET] = std::stod(variableValue); * SECONDS_IN_YEAR;
+                        this->minSimVals[TRIPTIME_OFFSET] = std::stod(variableValue) * SECONDS_IN_YEAR;
                     }
                     else if (variableName == "triptime_max") {
-                        this->maxSimVals[TRIPTIME_OFFSET] = std::stod(variableValue); * SECONDS_IN_YEAR;
+                        this->maxSimVals[TRIPTIME_OFFSET] = std::stod(variableValue) * SECONDS_IN_YEAR;
                     }
                     else if (variableName == "gamma_min") {
                         this->minSimVals[GAMMA_OFFSET] = std::stod(variableValue);
@@ -322,9 +322,9 @@ void cudaConstants::FileRead(std::string fileName) {
                     else if (variableName == "maxSimNum") {
                         this->maxSimNum = std::stoi(variableValue);
                     }
-                    else if (variableName == "best_count") {
-                        this->best_count = std::stoi(variableValue);
-                    }
+                    // else if (variableName == "best_count") {
+                    //     this->best_count = std::stoi(variableValue);
+                    // }
                     else if (variableName == "orbitalRadius"){
                         this->orbitalRadius = std::stod(variableValue);
                     }
@@ -545,19 +545,19 @@ void cudaConstants::importObjective(std::string line) {
         std::cout << "\n-----BAD ALLOWED DIFFERENCE SET, SETTING NEW ALLOWED DIFF; OBJECTIVE: " << name << "-----\n";
     }
     //  A larger goal difference than allowed difference
-    if (goalDiff > allowedDiff) {
-        //Set a reasonable goal diff
-        goalDiff = allowedDiff*0.8;
-        //Error message
-        std::cout << "\n-----BAD GOAL DIFFERENCE SET, SETTING NEW GOAL DIFF; OBJECTIVE: " << name << "-----\n";
-    }
+    // if (goalDiff > allowedDiff) {
+    //     //Set a reasonable goal diff
+    //     goalDiff = allowedDiff*0.8;
+    //     //Error message
+    //     std::cout << "\n-----BAD GOAL DIFFERENCE SET, SETTING NEW GOAL DIFF; OBJECTIVE: " << name << "-----\n";
+    // }
     //  See if the goal is set correctly
     if (goal == 0) {
         std::cout << "\n-----BAD OBJECTIVE GOAL PULLED; BAD OBJECTIVE: " << name << "-----\n";
     } 
 
     //Add the objective to the mission objectives vector using the gathered information
-    missionObjectives.push_back(objective(name, goal, target, allowedDiff, goalDiff, equateTolerance)); 
+    missionObjectives.push_back(objective(name, goal, target, allowedDiff, equateTolerance)); 
 }
 
 // Output cudaConstant contents with formatting for better readibility when doing a run in main()
@@ -608,7 +608,7 @@ std::ostream& operator<<(std::ostream& os, const cudaConstants& object) {
     os << "Mission Goals: ";
     for (int i = 0; i < object.missionObjectives.size(); i++) {
         os << "\n\tObjective: " << object.missionObjectives[i].name << "\tIdentified Goal: " << object.missionObjectives[i].goal << "\tTarget: " << object.missionObjectives[i].target 
-           << "\tAllowed Difference: " << object.missionObjectives[i].allowedDifference << "\tGoal Difference: " << object.missionObjectives[i].goalDifference << "\tEquate Tolerance: " << object.missionObjectives[i].equateTolerance; 
+           << "\tAllowed Difference: " << object.missionObjectives[i].allowedDifference << "\tEquate Tolerance: " << object.missionObjectives[i].equateTolerance; 
     }
     os << "\n";
     os << "====================================================================================================\n";

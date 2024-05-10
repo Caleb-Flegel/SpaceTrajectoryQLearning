@@ -5,7 +5,7 @@
 
 #include <math.h> // used for sine and cosine functions
 
-template <class T> __host__ __device__ T calc_Series(const T series[], const int series_size, const T & curTime, const T & timeFinal) {
+template <class T>  T calc_Series(const T series[], const int series_size, const T & curTime, const T & timeFinal) {
     T coeff = series[0];
     T curTimeRatio = curTime / timeFinal;
 
@@ -16,15 +16,15 @@ template <class T> __host__ __device__ T calc_Series(const T series[], const int
     return coeff;
 }
 
-template <class T> __host__ __device__ T calc_gamma(coefficients<T> & coeff,const T & curTime, const T & timeFinal) {
+template <class T>  T calc_gamma(coefficients<T> & coeff,const T & curTime, const T & timeFinal) {
     return calc_Series(coeff.gamma, coeff.gammaSize, curTime, timeFinal);
 }
 
-template <class T> __host__ __device__ T calc_tau(coefficients<T> & coeff, const T & curTime, const T & timeFinal) {
+template <class T>  T calc_tau(coefficients<T> & coeff, const T & curTime, const T & timeFinal) {
     return calc_Series(coeff.tau, coeff.tauSize, curTime, timeFinal);
 }
 
-template <class T> __host__ __device__ bool calc_coast(coefficients<T> & coeff, const T & curTime, const T & timeFinal, thruster<T> & thrust) {
+template <class T>  bool calc_coast(coefficients<T> & coeff, const T & curTime, const T & timeFinal, thruster<T> & thrust) {
     // Use the fourier series for the coasting coefficients, then take the sin^2(coasting)
     T coastValue = pow( sin(calc_Series(coeff.coast, coeff.coastSize, curTime, timeFinal)), 2);
     // if it is above the optimized threshold we return true for not coasting

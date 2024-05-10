@@ -25,7 +25,7 @@ struct State {
     State();
 
     //Construction 
-    State(const cudaConstants * cConstants);
+    State(const cudaConstants * cConstants, std::mt19937_64 & rng);
 
     // Returns a vector of strings saying which actions the spacecraft could take
     std::vector<std::string> getPossibleActions(const cudaConstants * cConstants);
@@ -36,3 +36,7 @@ struct State {
     //Calculates simulation params based on the current state increments
     rkParameters<double> getSimVal(const cudaConstants * cConstants);
 };
+
+#include "state.cpp"
+
+#endif

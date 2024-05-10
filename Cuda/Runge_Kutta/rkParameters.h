@@ -13,13 +13,13 @@ template <class T> struct rkParameters {
     //////////////////
 
     // Updated constructor which sets all the components according to values taken in
-   __host__ __device__ rkParameters<T>(T tripTime0, 
+    rkParameters<T>(T tripTime0, 
                    T r0, T theta0, T z0, T vr0, T vtheta0, T vz0, // elements<T>
                    T *gamma0, T *tau0, T *coast0, T alpha0, T beta0, T zeta0); // coefficients<T>
 
 
     // Constructor which sets all the components according to values taken in
-   __host__ __device__ rkParameters<T>(T tripTime0, 
+    rkParameters<T>(T tripTime0, 
                    T r0, T theta0, T z0, T vr0, T vtheta0, T vz0, // elements<T>
                    T *gamma0, T *tau0, T *coast0); // coefficients<T>
 
@@ -27,24 +27,24 @@ template <class T> struct rkParameters {
     // timeFinal0           - Total time of mission (s)
     // initialCondition     - Initial position of the spacecraft at start of calculation (escape position/velocity)
     // coeff0               - Coefficients for the thrust angles and  acceleration
-    __host__ __device__ rkParameters<T>(T tripTime0,
+     rkParameters<T>(T tripTime0,
                   elements<T> initialCondition, coefficients<T> coeff0);  
 
     // Updated alternate Constructor
     // timeFinal0           - Total time of mission (s)
     // coeff0               - Coefficients for the thrust angles and  acceleration
     // alpha,beta,zeta      - Launch angles at SOI 
-    __host__ __device__ rkParameters<T>(T tripTime0, T alpha0, T beta0, T zeta0, coefficients<T> coeff0);  
+     rkParameters<T>(T tripTime0, T alpha0, T beta0, T zeta0, coefficients<T> coeff0);  
 
 
 
     // constructor which sets everything to zero
-    __host__ __device__ rkParameters<T>();
+     rkParameters<T>();
     
     
     #ifdef UNITTEST //set up in unit_testing_main.cpp
     //Won't actually work for any calculations, but allows you to compare tripTime, alpha, beta, and zeta to ensure they behave as expected
-    __host__ __device__ rkParameters<T>(T tripTime0, T alpha0, T beta0, T zeta0): tripTime(tripTime0), alpha(alpha0), beta(beta0), zeta(zeta0){}
+     rkParameters<T>(T tripTime0, T alpha0, T beta0, T zeta0): tripTime(tripTime0), alpha(alpha0), beta(beta0), zeta(zeta0){}
     #endif
 
 

@@ -1,16 +1,16 @@
 // Spaceflight Optimization Project using CUDA and a genetic algorithm
 
 #include "../Planet_calculations/planetInfo.h"  // For launchCon and EarthInfo(); includes elements, runge_kutta, & config.h
-#include "../Q-Algorithm/adult.h" // For adult structs, paths to rkParameters for randomParameters(); includes child, rkParameters, & planetInfo
+//#include "../Q-Algorithm/adult.h" // For adult structs, paths to rkParameters for randomParameters(); includes child, rkParameters, & planetInfo
 #include "../Q-Algorithm/child.h" // For child structs, paths to rkParameters for randomParameters(); includes config.h, rkParameters, & planetInfo
-#include "../Output_Funcs/output.h" // For terminalDisplay(), recordGenerationPerformance(), and finalRecord()
-#include "../Runge_Kutta/runge_kuttaCUDA.cuh" // for testing rk4simple; includes calcFourier, motion_eqns, child, & gpuMem
-#include "../Q-Algorithm/ga_crossover.h" // for selectSurvivors() and newGeneration(); includes constants.h, adult, & child
-#include "../Q-Algorithm/genetic_algorithm.h" //For functions that set up new generations; includes constants.h, adult, child, ga_crossover, & sort
-#include "../Q-Algorithm/referencePoints.h" //For the ReferencePoints class which deals with calculating reference points and setting adult's rarity
-#include "../Q-Algorithm/sort.h" //For functions that will allow for sorting of the adult arrays by giving them ranks and distances; includes constants.h & adult
-#include "../Q-Algorithm/anneal.h" //For all the annealing functions; includes constants.h & adult
-#include "../Runge_Kutta/gpuMem.cuh" // for initializing and deallocating; includes child, rkParameters, & config.h
+//#include "../Output_Funcs/output.h" // For terminalDisplay(), recordGenerationPerformance(), and finalRecord()
+#include "../Runge_Kutta/runge_kutta.h" // for testing rk4simple; includes calcFourier, motion_eqns, child, & gpuMem
+//#include "../Q-Algorithm/ga_crossover.h" // for selectSurvivors() and newGeneration(); includes constants.h, adult, & child
+//#include "../Q-Algorithm/genetic_algorithm.h" //For functions that set up new generations; includes constants.h, adult, child, ga_crossover, & sort
+//#include "../Q-Algorithm/referencePoints.h" //For the ReferencePoints class which deals with calculating reference points and setting adult's rarity
+//#include "../Q-Algorithm/sort.h" //For functions that will allow for sorting of the adult arrays by giving them ranks and distances; includes constants.h & adult
+//#include "../Q-Algorithm/anneal.h" //For all the annealing functions; includes constants.h & adult
+//#include "../Runge_Kutta/gpuMem.cuh" // for initializing and deallocating; includes child, rkParameters, & config.h
 
 #include <iostream> // cout
 #include <iomanip>  // used for setw(), sets spaces between values output
@@ -27,7 +27,7 @@
 // Input: oldAdults - this generation of Adults, defined/initialized in optimimize
 //        cConstants - struct holding config values, used for accessing best_count value and objectives list
 // Output: Returns true if top best_count adults within the pool are within the tolerance
-bool checkTolerance(std::vector<Adult> & oldAdults, const cudaConstants* cConstants);
+bool checkTolerance(const Child& ind, const cudaConstants* cConstants);
 
 //----------------------------------------------------------------------------------------------------------------------------
 // TEST / LIKELY TEMPORARY FUNCTION
@@ -46,7 +46,7 @@ bool checkTolerance(std::vector<Adult> & oldAdults, const cudaConstants* cConsta
 //          avgBirthday - average birth generation for the adults
 //          oldestBirthday - the oldest adult's birth generation
 // Outputs: The arguments will be filled in with the up-to-date values for this generation
-void calculateGenerationValues (std::vector<Adult> & allAdults, const std::vector<objective> & objectives, std::vector<double> & objectiveAvgValues, int & totAssoc, int & duplicateNum, double & minDist, double & avgDist, double & maxDist, int & minSteps, int & avgSteps, int & maxSteps, const int & generation, double & avgAge, double & avgBirthday, int & oldestBirthday);
+//void calculateGenerationValues (std::vector<Adult> & allAdults, const std::vector<objective> & objectives, std::vector<double> & objectiveAvgValues, int & totAssoc, int & duplicateNum, double & minDist, double & avgDist, double & maxDist, int & minSteps, int & avgSteps, int & maxSteps, const int & generation, double & avgAge, double & avgBirthday, int & oldestBirthday);
 
 //----------------------------------------------------------------------------------------------------------------------------
 // Main processing function for Genetic Algorithm
@@ -238,7 +238,7 @@ bool checkTolerance(const Child& ind, const cudaConstants* cConstants) {
 
 //Function that gets a new state for the individual
 //  Compares all possible actions and randomly chooses either a random action or the best action and returns the new state based on that action
-std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, const Child & ind, std::mt19937_64 & rng) {
+std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, Child & ind, std::mt19937_64 & rng) {
     //Get possible actions
     std::vector<std::string> possActions = ind.curState.getPossibleActions(cConstants);
 
@@ -247,14 +247,14 @@ std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, const 
 
     //Fill the nextstates vector based on the possible actions
     for (int i = 0; i < possActions.size(); i++){
-        nextStates.append(ind.curState.getNewState(possActions[i]));
+        nextStates.push_back(ind.curState.getNewState(possActions[i]));
     }
 
     //Array which will hold the output state
     std::array<int, OPTIM_VARS> outputState;
 
     //Generate random value to see if the selected next state is random or the max value
-    float stateType = rng() / rng.max;
+    float stateType = rng() / rng.max();
 
     //See if the next state should be a random or best state
     if (stateType > cConstants->epsilon){
@@ -276,7 +276,7 @@ std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, const 
         float randState = rng() % nextStates.size();
 
         //Assign the random state
-        outputState = nextState[randState];
+        outputState = nextStates[randState];
     }
 
     return outputState;
@@ -313,10 +313,10 @@ double optimize(const cudaConstants* cConstants) {
     std::cout << "----------------------------------------------------------------------------------------------------" << std::endl;
 
     //Initialize the output object with the base folder location (..\Output_Files\)
-    output genOutputs(cConstants);
+    //output genOutputs(cConstants);
 
     // Initial genetic anneal scalar
-    double currentAnneal = cConstants->anneal_initial;
+    //double currentAnneal = cConstants->anneal_initial;
     
     // Main set of parameters for Genetic Algorithm
     // contains all thread unique input parameters
@@ -334,9 +334,9 @@ double optimize(const cudaConstants* cConstants) {
     // number of current generation
     int generation = 0;
 
-    genOutputs.recordMarsData(cConstants,generation);
-    genOutputs.recordEarthData(cConstants,generation);
-    genOutputs.recordReferencePoints(cConstants, refPoints);
+    // genOutputs.recordMarsData(cConstants,generation);
+    // genOutputs.recordEarthData(cConstants,generation);
+    // genOutputs.recordReferencePoints(cConstants, refPoints);
 
     // Flag for finishing the genetic process
     // set by checkTolerance()
@@ -394,8 +394,8 @@ double optimize(const cudaConstants* cConstants) {
         individual.curState.stateParams = newState;
 
         //TODO: sim here to get progress
-        timeInitial = 0;
-        callRK(individual, cConstants->rk_tol, cConstants, marsLaunchCon, timeInitial);
+        double timeInitial = 0;
+        callRK(individual, cConstants->rk_tol, cConstants, *marsLaunchCon, timeInitial);
         
         //TODO: (possibly in the last func) choose either the best or a random next state
         update_q_values(cConstants, individual, prevState);
@@ -439,7 +439,7 @@ double optimize(const cudaConstants* cConstants) {
         // Before replacing new adults, determine whether all are within tolerance
         // Determines when loop is finished
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE CONVERGENCE CHECK-_-_-_-_-_-_-_-_-_\n\n";
-        convergence = checkTolerance(oldAdults, cConstants); //QL: done
+        convergence = checkTolerance(individual, cConstants); //QL: done
 
         //Reset the progress sort from checkTolerance
         //mainSort(oldAdults, cConstants, oldAdults.size());      

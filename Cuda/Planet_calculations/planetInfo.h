@@ -102,7 +102,7 @@ elements<double> planetInitial_incremental(double timeInitial, double tripTime,c
 //        planetConditions - the array of elements that holds the position of the planet at timeRes intervals
 // Output: The position of the planet currentTime seconds BEFORE the spacecraft reaches the target
 // NOTE: This is a device version of getCondition -> if changes are made to getCondition, you will likely want to make them here too 
-__host__ __device__ elements<double> getConditionDev(const double & currentTime, const cudaConstants * cConstants, const elements<double>* planetConditions);
+ elements<double> getConditionDev(const double & currentTime, const cudaConstants * cConstants, const elements<double>* planetConditions);
 
 
 #include "planetInfo.cpp"

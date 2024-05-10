@@ -9,11 +9,11 @@ PlanetInfo::PlanetInfo(const cudaConstants* cConstants, const int & planetStatus
     //earth starts at triptime as it will be a collection of impact postions
     //mars starts at zero as we care about all of its positions leading up to impact 
     if(planetStatus == EARTH){
-        startTime = cConstants->triptime_min; // Starting time (s), chronologically this is closest to impact time (0 would be exactly impact date)
-        endTime = cConstants->triptime_max;   // Ending time (s), chronologically this is earliest time away from impact date
+        startTime = cConstants->minSimVals[TRIPTIME_OFFSET]; // Starting time (s), chronologically this is closest to impact time (0 would be exactly impact date)
+        endTime = cConstants->maxSimVals[TRIPTIME_OFFSET];   // Ending time (s), chronologically this is earliest time away from impact date
     }else if(planetStatus == MARS){ 
         startTime = 0.0; // Starting time (s), chronologically this is closest to impact time (0 would be exactly impact date)
-        endTime = cConstants->triptime_max;   // Ending time (s), chronologically this is earliest time away from impact date
+        endTime = cConstants->maxSimVals[TRIPTIME_OFFSET];   // Ending time (s), chronologically this is earliest time away from impact date
     }
     
     timeRes = cConstants->timeRes;        // Time resolution for storing data points (s)
@@ -74,7 +74,7 @@ PlanetInfo::PlanetInfo(const cudaConstants* cConstants, const int & planetStatus
 // Output: Returns an element that is to the planet's position/velocity at currentTime away from impact using interpolate
 //         as currentTime very likely does not directly corelate to an explicit derived element in planetCon
 elements<double> PlanetInfo::getCondition(const double & currentTime) {
-// __host__ __device__ elements<double> PlanetInfo::getCondition(const double & currentTime) {
+//  elements<double> PlanetInfo::getCondition(const double & currentTime) {
     // Defining variables to use
     elements<double> lower;
     elements<double> upper;
@@ -176,7 +176,7 @@ elements<double> planetInitial_incremental(double timeInitial, double tripTime, 
 
 int getPlanetSize(const cudaConstants * cConstants){
     double startTime = 0.0; // Starting time (s), chronologically this is closest to impact time (0 would be exactly impact date)
-    double endTime = cConstants->triptime_max;   // Ending time (s), chronologically this is earliest time away from impact date
+    double endTime = cConstants->maxSimVals[TRIPTIME_OFFSET];   // Ending time (s), chronologically this is earliest time away from impact date
     double timeRes = cConstants->timeRes;        // Time resolution for storing data points (s)
     int tolData = ((endTime-startTime)/timeRes) + 1; // Total Number of Data points in planetCon based on duration in seconds divided by resolution, plus one for the last 'section'
     return tolData*6;//size of array * 6 for elements
@@ -184,14 +184,14 @@ int getPlanetSize(const cudaConstants * cConstants){
 
 
 //interpolates the position of the planet currentTime seconds BEFORE the spacecraft reaches the target
-__host__ __device__ elements<double> getConditionDev(const double & currentTime, const cudaConstants * cConstants, const elements<double>* planetConditions) {
-// __host__ __device__ elements<double> PlanetInfo::getCondition(const double & currentTime) {
+ elements<double> getConditionDev(const double & currentTime, const cudaConstants * cConstants, const elements<double>* planetConditions) {
+//  elements<double> PlanetInfo::getCondition(const double & currentTime) {
     // Defining variables to use
     elements<double> lower;
     elements<double> upper;
     elements<double> result;
     double startTime = 0.0;
-    double endTime = cConstants->triptime_max;
+    double endTime = cConstants->maxSimVals[TRIPTIME_OFFSET];
     double timeRes = cConstants->timeRes;
     
     int index, indexMin, indexMax;

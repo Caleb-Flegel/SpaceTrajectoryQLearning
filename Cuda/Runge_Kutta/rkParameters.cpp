@@ -92,60 +92,60 @@ template <class T> rkParameters<T>::rkParameters() {
 // input: rng - random number object generator to be used to generate random values
 //        cConstants - to access the random range values
 // output: an rkParameters object that contains randomized properties within a valid ranges
-rkParameters<double> randomParameters(std::mt19937_64 & rng, const cudaConstants * cConstants) {
-    double tripTime =  ( ((cConstants->triptime_max - cConstants->triptime_min) * (static_cast<double>(rng()) / rng.max())) + cConstants->triptime_min);
+// rkParameters<double> randomParameters(std::mt19937_64 & rng, const cudaConstants * cConstants) {
+//     double tripTime =  ( ((cConstants->triptime_max - cConstants->triptime_min) * (static_cast<double>(rng()) / rng.max())) + cConstants->triptime_min);
 
-    double alpha = cConstants->alpha_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
-    double  beta = cConstants-> beta_random_start_range * ((static_cast<double>(rng()) / rng.max())); // From 0 to start range, beta cannot be negative
-    double  zeta = cConstants-> zeta_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5); 
+//     double alpha = cConstants->alpha_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
+//     double  beta = cConstants-> beta_random_start_range * ((static_cast<double>(rng()) / rng.max())); // From 0 to start range, beta cannot be negative
+//     double  zeta = cConstants-> zeta_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5); 
 
-    coefficients<double> testcoeff;
-    for (int j = 0; j < testcoeff.gammaSize; j++) {
-        testcoeff.gamma[j] = cConstants->gamma_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
-    }
-    for (int j = 0; j < testcoeff.tauSize; j++) {
-        testcoeff.tau[j] = cConstants->tau_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
-    }
-    for (int j = 0; j < testcoeff.coastSize; j++) {
-        testcoeff.coast[j] = cConstants->coast_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
-    }
+//     coefficients<double> testcoeff;
+//     for (int j = 0; j < testcoeff.gammaSize; j++) {
+//         testcoeff.gamma[j] = cConstants->gamma_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
+//     }
+//     for (int j = 0; j < testcoeff.tauSize; j++) {
+//         testcoeff.tau[j] = cConstants->tau_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
+//     }
+//     for (int j = 0; j < testcoeff.coastSize; j++) {
+//         testcoeff.coast[j] = cConstants->coast_random_start_range * 2 * ((static_cast<double>(rng()) / rng.max()) - 0.5);
+//     }
 
-    rkParameters<double> test(tripTime, alpha, beta, zeta, testcoeff);
+//     rkParameters<double> test(tripTime, alpha, beta, zeta, testcoeff);
 
-    //std::cout << "\n" << test.tripTime << "\n";
+//     //std::cout << "\n" << test.tripTime << "\n";
 
-    //Initialize the output parameter
-    return test; 
-}
+//     //Initialize the output parameter
+//     return test; 
+// }
 
 
-template <class T> double rkParameters<T>::compare(const rkParameters<T> & other) {
+// template <class T> double rkParameters<T>::compare(const rkParameters<T> & other) {
 
-    //Add the percent differences of all the variables together to create a total difference
-    double percentDiff = 0;
-    //coefficients
-    for (int i = 0; i < this->coeff.gammaSize; i++) {
-        percentDiff += abs(100*abs(this->coeff.gamma[i] - other.coeff.gamma[i])/(0.5*(this->coeff.gamma[i]+other.coeff.gamma[i])));
-    }
-    for (int i = 0; i < this->coeff.tauSize; i++) {
-        percentDiff += abs(100*abs(this->coeff.tau[i] - other.coeff.tau[i])/(0.5*(this->coeff.tau[i]+other.coeff.tau[i])));
-    }
-    for (int i = 0; i < this->coeff.coastSize; i++) {
-        percentDiff += abs(100*abs(this->coeff.coast[i] - other.coeff.coast[i])/(0.5*(this->coeff.coast[i]+other.coeff.coast[i])));
-    }
-    //launch angles
-    percentDiff += this->y0.compare(other.y0);
-    //tripTime
-    percentDiff += abs(100*abs(this->tripTime - other.tripTime)/(0.5*(this->tripTime+other.tripTime)));
+//     //Add the percent differences of all the variables together to create a total difference
+//     double percentDiff = 0;
+//     //coefficients
+//     for (int i = 0; i < this->coeff.gammaSize; i++) {
+//         percentDiff += abs(100*abs(this->coeff.gamma[i] - other.coeff.gamma[i])/(0.5*(this->coeff.gamma[i]+other.coeff.gamma[i])));
+//     }
+//     for (int i = 0; i < this->coeff.tauSize; i++) {
+//         percentDiff += abs(100*abs(this->coeff.tau[i] - other.coeff.tau[i])/(0.5*(this->coeff.tau[i]+other.coeff.tau[i])));
+//     }
+//     for (int i = 0; i < this->coeff.coastSize; i++) {
+//         percentDiff += abs(100*abs(this->coeff.coast[i] - other.coeff.coast[i])/(0.5*(this->coeff.coast[i]+other.coeff.coast[i])));
+//     }
+//     //launch angles
+//     percentDiff += this->y0.compare(other.y0);
+//     //tripTime
+//     percentDiff += abs(100*abs(this->tripTime - other.tripTime)/(0.5*(this->tripTime+other.tripTime)));
 
-    //return total
-    return percentDiff;
-}
+//     //return total
+//     return percentDiff;
+// }
 
-template <class T> void rkParameters<T>::parametersRK4Simple(T timeInitial, T stepSize, T absTol, elements<T> & y) {
-    double accel = 0;
-    rk4Simple(timeInitial, tripTime, y0, stepSize, y, absTol, coeff, accel, static_cast<double>(WET_MASS));
-}
+// template <class T> void rkParameters<T>::parametersRK4Simple(T timeInitial, T stepSize, T absTol, elements<T> & y) {
+//     double accel = 0;
+//     rk4Simple(timeInitial, tripTime, y0, stepSize, y, absTol, coeff, accel, static_cast<double>(WET_MASS));
+// }
 
 template <class T> std::ostream & operator<<(std::ostream & Str, const rkParameters<T> & e) {
     Str << std::fixed;

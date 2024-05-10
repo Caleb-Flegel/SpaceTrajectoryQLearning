@@ -18,23 +18,23 @@ template <class T> struct elements {
     T vz;     // axial velocity (out-of-plane) - AU/s
 
     // Constructor which sets all the components
-    __host__ __device__ elements<T>(T r0, T theta0, T z0, T vr0, T vtheta0, T vz0);
+     elements<T>(T r0, T theta0, T z0, T vr0, T vtheta0, T vz0);
 
     // Default constructor which takes no values and sets everything to 0
-    __host__ __device__ elements<T>();
+     elements<T>();
 
     // Overload operators to do math on all the elements in the struct seperately
     // Treating each element as a matrix operation
 
     // Operator overloads, used in runge kutta for the math between elements
-    __host__ __device__ elements<T> operator+(const elements<T>& e) const;
-    __host__ __device__ elements<T> operator-(const elements<T>& e) const;
-    // __host__ __device__ elements<T> operator*(const elements<T>& e) const;
-    // __host__ __device__ elements<T> operator/(const elements<T>& e) const;
+     elements<T> operator+(const elements<T>& e) const;
+     elements<T> operator-(const elements<T>& e) const;
+    //  elements<T> operator*(const elements<T>& e) const;
+    //  elements<T> operator/(const elements<T>& e) const;
 
     // Operator overloads, for scalars
-    __host__ __device__ elements<T> operator*(const T& i) const;
-    __host__ __device__ elements<T> operator/(const T& i) const;
+     elements<T> operator*(const T& i) const;
+     elements<T> operator/(const T& i) const;
 
 
     // Comparison method to compare this elements to another, returning true (equivalent) within a threshold

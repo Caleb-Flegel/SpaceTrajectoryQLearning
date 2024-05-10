@@ -75,7 +75,7 @@ Child:: Child(const Child& other){
 }
 
 //Getter for a parameter dependent on the objective that is passed in
-__host__ double Child::getParameters (const objective & requestObjective) const {
+double Child::getParameters (const objective & requestObjective) const {
     //if/esle tree will go find the parameter goal of the request objective and return the associated value
     if (requestObjective.goal == POS_DIFF) {
         return posDiff;
@@ -118,7 +118,7 @@ __host__ double Child::getParameters (const objective & requestObjective) const 
 // Calculates a posDiff value
 // Input: cConstants in accessing properties such as r_fin_target, theta_fin_target, and z_fin_target
 // Output: Assigns and returns this individual's posDiff value
-__host__ __device__ double Child::getPosDiff(const cudaConstants* cConstants) {
+ double Child::getPosDiff(const cudaConstants* cConstants) {
     //Calculate the normal posDiff using the sun-relative pos diff between the spacecraft and the target 
     //posDiff = sqrt(delta(r)^2 + delta(theta)^2 - r*fmod(theta, 2pi) + delta(z)^2 ) -> magnitude of delta(position)
     posDiff = sqrt(pow(cConstants->r_fin_target - finalPos.r, 2) + pow( (cConstants->r_fin_target * cConstants->theta_fin_target) - (finalPos.r * fmod(finalPos.theta, 2 * M_PI)), 2) + pow(cConstants->z_fin_target - finalPos.z, 2));
@@ -129,7 +129,7 @@ __host__ __device__ double Child::getPosDiff(const cudaConstants* cConstants) {
 // Calculates a speedDiff value
 // Input: cConstants in accessing properties such as vr_fin_target, vtheta_fin_target, and vz_fin_target
 // Output: Assigns and returns this child's speedDiff value
-__host__ __device__ double Child::getSpeedDiff(const cudaConstants* cConstants) {
+ double Child::getSpeedDiff(const cudaConstants* cConstants) {
     //Calculate the speed diff by calculating the sun-relative speed difference between the spacecraft and the target 
     speedDiff = sqrt(pow(cConstants->vr_fin_target - finalPos.vr, 2) + pow(cConstants->vtheta_fin_target - finalPos.vtheta, 2) + pow(cConstants->vz_fin_target - finalPos.vz, 2)); 
 
@@ -139,7 +139,7 @@ __host__ __device__ double Child::getSpeedDiff(const cudaConstants* cConstants) 
 // Calculates a horizontal velocity angle difference
 // Input: cConstants in accessing properties for the final velocity of the target (such as vr_fin_target, vtheta_fin_target, and vz_fin_target)
 // Output: Assigns and returns the difference in horizontal velocity angle between the individual and the target
-__host__ __device__ double Child::getHorzVelDiff(const cudaConstants* cConstants) {
+ double Child::getHorzVelDiff(const cudaConstants* cConstants) {
     //Use A*B=|A||B|cos(theta) equation to get theta
     //Initialize equation values
     double indMag = 0, tarMag = 0, dot = 0;
@@ -173,7 +173,7 @@ __host__ __device__ double Child::getHorzVelDiff(const cudaConstants* cConstants
 // Calculates a vertical velocity angle difference
 // Input: cConstants in accessing properties for the final velocity of the target (such as vr_fin_target, vtheta_fin_target, and vz_fin_target)
 // Output: Assigns and returns the difference in vertical velocity angle between the individual and the target
-__host__ __device__ double Child::getVertVelDiff(const cudaConstants* cConstants) {
+ double Child::getVertVelDiff(const cudaConstants* cConstants) {
     //Phi1 = arcsin(Vz1/|V1|)
     //Phi2 = arcsin(Vz2/|V2|)
     //Vert angle difference = Phi1 - Phi2
@@ -203,7 +203,7 @@ __host__ __device__ double Child::getVertVelDiff(const cudaConstants* cConstants
 // Calculates an orbit posDiff value
 // Input: cConstants in accessing properties for the orbit radius of the target
 // Output: Assigns and returns this individual's orbitPosDiff value
-__host__ __device__ double Child::getOrbitPosDiff(const cudaConstants* cConstants) {
+ double Child::getOrbitPosDiff(const cudaConstants* cConstants) {
     //Check to see if there is an orbit radius set
     //  Done by seeing if orbital radius is less than 0 since its default value is -1
     if (cConstants->orbitalRadius < 0) {
@@ -224,7 +224,7 @@ __host__ __device__ double Child::getOrbitPosDiff(const cudaConstants* cConstant
 // Calculates an orbit speedDiff value
 // Input: cConstants in accessing properties for the orbit speed of the target
 // Output: Assigns and returns this individual's orbitSpeedDiff value
-__host__ __device__ double Child::getOrbitSpeedDiff(const cudaConstants* cConstants) {
+ double Child::getOrbitSpeedDiff(const cudaConstants* cConstants) {
     //Check to see if there is an orbit radius set
     //  Done by seeing if orbital radius is less than 0 since its default value is -1
     if (cConstants->orbitalRadius < 0) {
@@ -246,7 +246,7 @@ __host__ __device__ double Child::getOrbitSpeedDiff(const cudaConstants* cConsta
 
 //!--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-__host__ void Child::getProgress(const cudaConstants* cConstants){
+void Child::getProgress(const cudaConstants* cConstants){
 
     //Check to see if the individual has an error or not
     //  Previously, if an individual had an error, it would be assigned a progress of 1, which would throw off reporting

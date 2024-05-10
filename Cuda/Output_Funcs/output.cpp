@@ -763,7 +763,7 @@ void output::errorCheck(double *time, elements<double> *yp,  double *gamma,  dou
 }
 
 void output::recordEarthData(const cudaConstants * cConstants, const int & generation) {
-  double timeStamp = cConstants->triptime_min; // Start the timeStamp at the triptime min (closest to impact)
+  double timeStamp = cConstants->minSimVals[TRIPTIME_OFFSET]; // Start the timeStamp at the triptime min (closest to impact)
   // seed to hold time_seed value to identify the file
   int seed = cConstants->time_seed;
   // Open file
@@ -772,7 +772,7 @@ void output::recordEarthData(const cudaConstants * cConstants, const int & gener
   // Set header row for the table to record values, with timeStamp
   planetValues << "TimeStamp, Radius, Theta, Z, vRadius, vTheta, vZ\n";
   // Fill in rows for elements of launchCon across the time range going backwards until triptime max
-  while (timeStamp < cConstants->triptime_max) {
+  while (timeStamp < cConstants->maxSimVals[TRIPTIME_OFFSET]) {
       planetValues << timeStamp << "," << launchCon->getCondition(timeStamp);
       timeStamp += cConstants->timeRes; // Increment to next hour as timeRes is assumed to be set to every hour in this output
   }
@@ -792,7 +792,7 @@ void output::recordMarsData(const cudaConstants * cConstants, const int & genera
   // Set header row for the table to record values, with timeStamp
   planetValues << "TimeStamp, Radius, Theta, Z, vRadius, vTheta, vZ\n";
   // Fill in rows for elements of launchCon across the time range going backwards until triptime max
-  while (timeStamp < cConstants->triptime_max) {
+  while (timeStamp < cConstants->maxSimVals[TRIPTIME_OFFSET]) {
       planetValues << timeStamp << "," << marsLaunchCon->getCondition(timeStamp);
       timeStamp += cConstants->timeRes; // Increment to next hour as timeRes is assumed to be set to every hour in this output
   }

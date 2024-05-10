@@ -3,6 +3,7 @@
 #include "../Thrust_Files/coefficients.h"
 #include "../Thrust_Files/thruster.h" // used to pass in a thruster type
 #include "../Config_Constants/constants.h" // used for simulation status
+#include "../Q-Algorithm/child.h"
 
 
 // Three variations of fifth-order Runge-Kutta algorthim for system of ODEs defined in ODE45.h
@@ -48,11 +49,17 @@ template <class T> void rk4Reverse(const T & timeInitial, const T & timeFinal, c
 // calculates k values 1 - 7 from equation and uses k values to find current and previous values of y
 // error = y_new - y_prev, calculated analytically using k values
 // error used in calc_scalingFactor
-template <class T> __host__ __device__ void rkCalc(T & curTime, const T & timeFinal, T stepSize, elements<T> & y_new, coefficients<T> & coeff, const T & accel, 
+template <class T> void rkCalc(T & curTime, const T & timeFinal, T stepSize, elements<T> & y_new, coefficients<T> & coeff, const T & accel, 
                                                     elements<T> & error, const elements<T> & mars, T & marsCraftDist);
 
 template <class T> void rkCalcPlanet(T & curTime, const T & timeFinal, T stepSize, elements<T> & y_new, elements<T> & error);
 
+
+void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) ;
+
+void callRKBasic(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double timeInitial);
+
+void rk4CPUSim(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double> & time_steps, std::vector<elements<double>> & y_steps, std::vector<double> & gamma_steps, std::vector<double> & tau_steps, std::vector<double> & accel_steps, std::vector<double> & fuel_steps);
 
 /**********************************************************************************************************************************/
 
@@ -63,7 +70,7 @@ template <class T> void rkCalcPlanet(T & curTime, const T & timeFinal, T stepSiz
 //      absTol: Sets the error tolerance for Runge-Kutta
 //      precThresh: passed to pmLimitCheck to set as threshold for too small
 // Output: Unitless scaling coefficient which changes the time step each iteration
-template <class T> __host__ __device__ T calc_scalingFactor(const elements<T> & previous , const elements<T> & difference, const T & absTol, const double precThresh);
+template <class T> T calc_scalingFactor(const elements<T> & previous , const elements<T> & difference, const T & absTol, const double precThresh);
 
 // Error magnitude check
 // Issue occurs when error is too small for a double to precicely represent
@@ -71,7 +78,7 @@ template <class T> __host__ __device__ T calc_scalingFactor(const elements<T> & 
 //      All components of error are within 12 orders of magnitude
 // Returns false if any of the error components are more than 12 orders of magnitude from previous
 // This is used to determine if the return of calc_scaling_factor should be calculated
-template <class T> __host__ __device__ bool pmLimitCheck(const elements<T> & pmError, const double precThresh);
+template <class T> bool pmLimitCheck(const elements<T> & pmError, const double precThresh);
 
 #include "runge_kutta.cpp"
 #endif

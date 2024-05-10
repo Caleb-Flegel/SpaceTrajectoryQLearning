@@ -297,15 +297,15 @@ void callRK(Child individual, double absTolInput, const cudaConstants* cConstant
 
 // Called by optimize() in optimization.cu
 //void callRK(const int numThreads, const int blockThreads, Child *generation, double timeInitial, double stepSize, double absTol, double & calcPerS, const cudaConstants* cConstant, PlanetInfo *marsLaunchCon) {
-void callRK(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) {
+void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double> & time_steps, std::vector<elements<double>> & y_steps, std::vector<double> & gamma_steps, std::vector<double> & tau_steps, std::vector<double> & accel_steps, std::vector<double> & fuel_steps, double timeInitial) {
 
     //which (if any) of these do we need to reset here?
     individual.simStatus = INITIAL_SIM;
     individual.errorStatus = NOT_RUN;
-    individual.startTime = 0;
+    individual.simStartTime = 0;
     individual.stepCount = 0;
     
-    double stepSize = (cConstant->triptime_min - timeInitial)/cConstant->max_numsteps;
+    double stepSize = (cConstant->minSimVals[TRIPTIME_OFFSET] - timeInitial)/cConstant->max_numsteps;
     
     //Do while loop will keep simulating while there are still children to simulate
     do {
@@ -346,13 +346,13 @@ void callRK(Child& individual, double absTolInput, const cudaConstants* cConstan
 
 // Called by optimize() in optimization.cu
 // This should be used when we don't need a MATLAB output
-void callRK(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double timeInitial) {
-    std::vector<double> time_steps;
-    std::vector<elements<double>> y_steps;
-    std::vector<double> gamma_steps; 
-    std::vector<double> tau_steps; 
-    std::vector<double> accel_steps;
-    std::vector<double> fuel_steps;
+void callRKBasic(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double timeInitial) {
+    std::vector<double> time_steps(0,0);
+    std::vector<elements<double>> y_steps(0,0);
+    std::vector<double> gamma_steps(0,0); 
+    std::vector<double> tau_steps(0,0); 
+    std::vector<double> accel_steps(0,0);
+    std::vector<double> fuel_steps(0,0);
     callRK(individual, absTolInput, cConstant, marsLaunchCon, time_steps, y_steps, gamma_steps, tau_steps, accel_steps, fuel_steps, timeInitial); //this doesn't work? what should i be doing
         
 }
@@ -654,7 +654,7 @@ template <class T> void rk4Reverse(const T & timeInitial, const T & timeFinal, c
     } //end of while
 }
 
-template <class T> __host__ __device__ void rkCalc(T & curTime, const T & timeFinal, T stepSize, elements<T> & y_new, coefficients<T> & coeff, const T & accel, 
+template <class T>  void rkCalc(T & curTime, const T & timeFinal, T stepSize, elements<T> & y_new, coefficients<T> & coeff, const T & accel, 
                                                     elements<T> & error, const elements<T> & mars, T & marsCraftDist) {
 
     // k variables for Runge-Kutta calculation of y_new
@@ -723,7 +723,7 @@ template <class T> void rkCalcPlanet(T & curTime, const T & timeFinal, T stepSiz
     error = (k1*(static_cast <double> (71)/static_cast <double> (57600))) + (k3*(static_cast <double> (-71)/static_cast <double> (16695))) + (k4*(static_cast <double> (71)/static_cast <double> (1920))) - (k5*(static_cast <double> (17253)/static_cast <double> (339200))) + (k6*(static_cast <double> (22)/static_cast <double> (525))) + (k7*(static_cast <double> (-1)/static_cast <double> (40)));    
 }
 
-template <class T> __host__ __device__ T calc_scalingFactor(const elements<T> & previous , const elements<T> & difference, const T & absTol, const double precThresh) {
+template <class T>  T calc_scalingFactor(const elements<T> & previous , const elements<T> & difference, const T & absTol, const double precThresh) {
     // relative total error is the total error of all coponents of y which is used in scale.
     // scale is used to determine the next step size.
     T normTotError, scale;
@@ -751,7 +751,7 @@ template <class T> __host__ __device__ T calc_scalingFactor(const elements<T> & 
     return scale;   
 }
 
-template <class T> __host__ __device__ bool pmLimitCheck(const elements<T> & pmError, const double precThresh){
+template <class T>  bool pmLimitCheck(const elements<T> & pmError, const double precThresh){
     //It is possible this is a major resource drain. This might be faster to square everything and not use fabs (floating point abs)
     if( (fabs(pmError.r) < precThresh ) ||
         (fabs(pmError.theta) < precThresh ) ||

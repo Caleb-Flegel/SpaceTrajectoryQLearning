@@ -118,43 +118,43 @@ struct Child {
     // Inputs: requestObjective - the objective which will be used to grab the right parameter from the child
     // Output: the parameter that is relevent to the objective
     //              Could be posDiff, fuelSpent, tripTime, etc
-    __host__ double getParameters (const objective & requestObjective) const;
+    double getParameters (const objective & requestObjective) const;
 
     // Calculates a posDiff value
     // Input: cConstants in accessing properties for the final position of the target (such as r_fin_target, theta_fin_target, and z_fin_target)
     // Output: Assigns and returns this individual's posDiff value
-    __host__ __device__ double getPosDiff(const cudaConstants* cConstants);
+     double getPosDiff(const cudaConstants* cConstants);
 
     // Calculates a speedDiff value
     // Input: cConstants in accessing properties for the final velocity of the target (such as vr_fin_target, vtheta_fin_target, and vz_fin_target)
     // Output: Assigns and returns this individual's speedDiff value
-    __host__ __device__ double getSpeedDiff(const cudaConstants* cConstants);
+     double getSpeedDiff(const cudaConstants* cConstants);
 
     // Calculates a horizontal velocity angle difference
     // Input: cConstants in accessing properties for the final velocity of the target (such as vr_fin_target, vtheta_fin_target, and vz_fin_target)
     // Output: Assigns and returns the difference in horizontal velocity angle between the individual and the target
-    __host__ __device__ double getHorzVelDiff(const cudaConstants* cConstants);
+     double getHorzVelDiff(const cudaConstants* cConstants);
 
     // Calculates a vertical velocity angle difference
     // Input: cConstants in accessing properties for the final velocity of the target (such as vr_fin_target, vtheta_fin_target, and vz_fin_target)
     // Output: Assigns and returns the difference in vertical velocity angle between the individual and the target
-    __host__ __device__ double getVertVelDiff(const cudaConstants* cConstants);
+     double getVertVelDiff(const cudaConstants* cConstants);
 
     // Calculates an orbit posDiff value
     // Input: cConstants in accessing properties for the orbit radius of the target
     // Output: Assigns and returns this individual's orbitPosDiff value
-    __host__ __device__ double getOrbitPosDiff(const cudaConstants* cConstants);
+     double getOrbitPosDiff(const cudaConstants* cConstants);
 
     // Calculates an orbit speedDiff value
     // Input: cConstants in accessing properties for the orbit speed of the target
     // Output: Assigns and returns this individual's orbitSpeedDiff value
-    __host__ __device__ double getOrbitSpeedDiff(const cudaConstants* cConstants);
+     double getOrbitSpeedDiff(const cudaConstants* cConstants);
 
     // Calculates the progress depending on the mission type
     // Input: cConstants for the tolerances, and the child's posDiff and speedDiff are used
     //        NOTE: This function assumes that the pos/speed diffs have already been calculated
     // Output: the child has been assigned a progress value betweeen 0 and 1
-    __host__ void getProgress(const cudaConstants* cConstants);
+    void getProgress(const cudaConstants* cConstants);
 };
 
 #include "child.cpp"

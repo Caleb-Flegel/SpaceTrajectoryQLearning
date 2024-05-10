@@ -213,8 +213,13 @@ std::array<int, OPTIM_VARS> State::getNewState(const std::string& action){
     //Based on the action increment or decrement the respective var increment value
     //  update class's stateParams array
     std::array<int, OPTIM_VARS> newParams;
-    newParams = stateParams;
 
+    //Copy stateParams into newParams
+    for (int i = 0; i < OPTIM_VARS; i++){
+        newParams[i] = stateParams[i];
+    }
+
+    //sees what we need to change in here
     if (action == "decrement_GAMMA0"){
         newParams[GAMMA0_OFFSET] -= 1;
     }

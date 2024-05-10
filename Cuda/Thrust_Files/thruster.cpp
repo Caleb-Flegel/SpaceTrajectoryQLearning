@@ -90,7 +90,7 @@ template <class T> T thruster<T>::calc_m_Dot(const T & Pin) {
 //     return Str;
 // }
 
-template <class T> __host__ __device__ T calc_accel(const T & radius, const T & z, thruster<T> & thrusterType, T & massExpelled, const T & deltaT, const bool & thrusting, const T & wetMass, const cudaConstants* cConstants) {
+template <class T>  T calc_accel(const T & radius, const T & z, thruster<T> & thrusterType, T & massExpelled, const T & deltaT, const bool & thrusting, const T & wetMass, const cudaConstants* cConstants) {
 
     if (cConstants->thruster_type == thruster<double>::NO_THRUST) {
         return 0;

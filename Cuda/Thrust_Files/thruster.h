@@ -12,7 +12,7 @@ template <class T> struct thruster {
     T coastThreshold;
 
     // Constructor - takes cudaConstants to determine thruster type
-    __host__ __device__ thruster<T>(const cudaConstants* gConfig);
+     thruster<T>(const cudaConstants* gConfig);
 
     // //overload the stream output for elements used for writing to a file
     // template <class T> friend std::ostream & operator<<(std::ostream & Str, const thruster<T> & e); 
@@ -21,13 +21,13 @@ template <class T> struct thruster {
     // Parameters:
     //         Pin: Given a certian value of power in to the spacecraft, a specific efficiency will be calculated for an iteration.
     // output: spacecraft's effciency for a certian iteration
-   __host__ __device__ T calc_eff(const T & Pin);
+    T calc_eff(const T & Pin);
 
     // Evaluates the spacecraft's fuel flow rate (mDot) for a certian iteration based off of "if statements".
     // Parameters:
     //         Pin: Given a certian value of power in to the spacecraft, a certian fuel flow rate will be set for an iteration.
     // output: spacecraft's mDot for a certian iteration
-    __host__ __device__ T calc_m_Dot(const T & Pin);
+     T calc_m_Dot(const T & Pin);
 
     // thruster type enumeration, used in readibility for the types of thrusters rather than reading hard-coded number values
     enum THRUST_TYPE {
@@ -48,7 +48,7 @@ template <class T> struct thruster {
         T AEPSm_Dot0 = 2.22E-05;  // maximum fuel flow rate (kg/s)
 };
 
-template <class T> __host__ __device__ T calc_accel(const T & radius, const T & z, thruster<T> & thrusterType, T & massExpelled, const T & deltaT, const bool & thrusting, const T & wetMass, const cudaConstants* cConstants);
+template <class T>  T calc_accel(const T & radius, const T & z, thruster<T> & thrusterType, T & massExpelled, const T & deltaT, const bool & thrusting, const T & wetMass, const cudaConstants* cConstants);
 
 #include "thruster.cpp"
 #endif
