@@ -2,7 +2,7 @@
 #define CHILD_H
 
 #include "../Runge_Kutta/rkParameters.h"
-#include "../Planet_calculations/planetInfo.h"
+// #include "../Planet_calculations/planetInfo.h"
 #include "../Config_Constants/constants.h"
 #include "../Q-Algorithm/state.h"
 
@@ -18,6 +18,8 @@
 // once a child is created it will then be copied to an adult with some added parameters
 struct Child {
     State curState; // The child's current state
+
+    rkParameters<double> curParams; //The child's current sim params
 
     elements<double> finalPos; // final position of the spacecraft at end of a simulation
 
@@ -118,7 +120,7 @@ struct Child {
     // Inputs: requestObjective - the objective which will be used to grab the right parameter from the child
     // Output: the parameter that is relevent to the objective
     //              Could be posDiff, fuelSpent, tripTime, etc
-    double getParameters (const objective & requestObjective) const;
+    double getParameters (const cudaConstants* cConstants, const objective & requestObjective) const;
 
     // Calculates a posDiff value
     // Input: cConstants in accessing properties for the final position of the target (such as r_fin_target, theta_fin_target, and z_fin_target)

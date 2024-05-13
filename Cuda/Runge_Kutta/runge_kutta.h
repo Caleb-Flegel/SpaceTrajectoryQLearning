@@ -55,7 +55,7 @@ template <class T> void rkCalc(T & curTime, const T & timeFinal, T stepSize, ele
 template <class T> void rkCalcPlanet(T & curTime, const T & timeFinal, T stepSize, elements<T> & y_new, elements<T> & error);
 
 
-void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) ;
+void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial);
 
 void callRKBasic(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double timeInitial);
 

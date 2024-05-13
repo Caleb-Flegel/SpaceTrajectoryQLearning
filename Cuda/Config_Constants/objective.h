@@ -66,7 +66,7 @@ struct objective {
 
     //Constructor that accepts the information for an objective, should be the only constructor used
     //    Should only be called when the mission.config file is parsed/loaded
-    objective(std::string _name, parameterGoals _goal, double _target, double _allowedDiff, double _goalDiff, double _equateTolerance):
+    objective(std::string _name, parameterGoals _goal, double _target, double _allowedDiff, double _equateTolerance):
         name(_name), goal(_goal), target(_target), allowedDifference(_allowedDiff), equateTolerance(_equateTolerance) {}
 };
 

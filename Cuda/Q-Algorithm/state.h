@@ -6,6 +6,7 @@
 #include<map>
 
 #include "../Config_Constants/constants.h"
+// #include "../Planet_calculations/planetInfo.h"
 //#include "../Q-Algorithm/state.cpp"
 
 // Class to handle the state
@@ -16,10 +17,10 @@ struct State {
     // int initStateParams[OPTIM_VARS];
 
     // Array to store the increments for each start param
-    int stateParams[OPTIM_VARS];
+    std::vector<int> stateParams;
 
     //Map to store a state's value
-    std::map<int[OPTIM_VARS], double> values;
+    std::map<std::vector<int>, double> values;
 
     //Base constructor
     State();
@@ -31,10 +32,10 @@ struct State {
     std::vector<std::string> getPossibleActions(const cudaConstants * cConstants);
 
     //Calculates a new state based on a (non simulate) selected action
-    std::array<int, OPTIM_VARS> getNewState(const std::string& action);
+    std::vector<int> getNewState(const std::string& action);
 
     //Calculates simulation params based on the current state increments
-    rkParameters<double> getSimVal(const cudaConstants * cConstants);
+    rkParameters<double> getSimVal(const cudaConstants * cConstants) const;
 };
 
 #include "state.cpp"

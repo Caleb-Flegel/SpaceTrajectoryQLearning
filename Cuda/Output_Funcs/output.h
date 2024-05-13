@@ -6,9 +6,9 @@
 
 #include "..\Runge_Kutta\rkParameters.h"
 #include "..\Config_Constants\config.h"
-#include "../Runge_Kutta/gpuMem.cuh"
-#include "../Runge_Kutta/runge_kuttaCUDA.cuh"
-#include "../Genetic_Algorithm/referencePoints.h"
+// #include "../Runge_Kutta/gpuMem.cuh"
+// #include "../Runge_Kutta/runge_kuttaCUDA.cuh"
+// #include "../Genetic_Algorithm/referencePoints.h"
 
 //Structure will hold the run's output folder address, many output functions, and will handle generational & final outputs
 //This will help make output folders more flexible

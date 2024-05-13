@@ -16,6 +16,7 @@
 #include <iomanip>  // used for setw(), sets spaces between values output
 #include <random>   // for std::mt19937_64 object
 #include <vector>   // allows us to use vectors instead of just arrays
+#include <array>
 #include <string>
 #include <chrono>
 #include <algorithm>
@@ -238,12 +239,12 @@ bool checkTolerance(const Child& ind, const cudaConstants* cConstants) {
 
 //Function that gets a new state for the individual
 //  Compares all possible actions and randomly chooses either a random action or the best action and returns the new state based on that action
-std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, Child & ind, std::mt19937_64 & rng) {
+std::vector<int> getNextState(const cudaConstants* cConstants, Child & ind, std::mt19937_64 & rng) {
     //Get possible actions
     std::vector<std::string> possActions = ind.curState.getPossibleActions(cConstants);
 
     //Vector that will store the next states based on the actions
-    std::vector<std::array<int, OPTIM_VARS>> nextStates;
+    std::vector<std::vector<int>> nextStates;
 
     //Fill the nextstates vector based on the possible actions
     for (int i = 0; i < possActions.size(); i++){
@@ -251,7 +252,7 @@ std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, Child 
     }
 
     //Array which will hold the output state
-    std::array<int, OPTIM_VARS> outputState;
+    std::vector<int> outputState;
 
     //Generate random value to see if the selected next state is random or the max value
     float stateType = rng() / rng.max();
@@ -287,7 +288,7 @@ std::array<int, OPTIM_VARS> getNextState(const cudaConstants* cConstants, Child 
 
 //we have simulated the new state, the spacecraft has moved to the new state, and we update the q-value of the previous state
 //prevState is basically the key for the previous state
-void update_q_values(const cudaConstants* cConstants, Child & ind, const std::array<int, OPTIM_VARS>& prevState){
+void update_q_values(const cudaConstants* cConstants, Child & ind, const std::vector<int>& prevState){
     //we want the reward to be how close to the target the individual is
     double reward = ind.progress;
 
@@ -387,15 +388,16 @@ double optimize(const cudaConstants* cConstants) {
         // newGeneration(oldAdults, newAdults, currentAnneal, generation, rng, cConstants, gpuValues);
 
         //TODO: use function to get possible actions then get the value of the adjacent actions
-        std:array<int, OPTIM_VARS> newState = getNextState(cConstants, individual, rng);
+        std::vector<int> newState = getNextState(cConstants, individual, rng);
 
         //Save the previous state and update the child's state with the new state
-        std:array<int, OPTIM_VARS> prevState = individual.curState.stateParams;
+        std::vector<int> prevState = individual.curState.stateParams;
         individual.curState.stateParams = newState;
+        individual.curParams = individual.curState.getSimVal(cConstants);
 
         //TODO: sim here to get progress
         double timeInitial = 0;
-        callRK(individual, cConstants->rk_tol, cConstants, *marsLaunchCon, timeInitial);
+        callRKBasic(individual, cConstants->rk_tol, cConstants, marsLaunchCon->getAllPositions(), timeInitial);
         
         //TODO: (possibly in the last func) choose either the best or a random next state
         update_q_values(cConstants, individual, prevState);

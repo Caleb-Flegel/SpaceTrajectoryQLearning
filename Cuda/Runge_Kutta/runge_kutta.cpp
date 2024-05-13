@@ -12,6 +12,10 @@
 #include "../Motion_Eqns/motion_equations.h"
 #include "..\Runge_Kutta\rkParameters.h"
 #include "..\Config_Constants\config.h"
+#include "..\Q-Algorithm\child.h"
+#include "..\Thrust_Files\thruster.h"
+#include "..\Thrust_Files\calcFourier.h"
+// #include "../Planet_calculations/planetInfo.h"
 
 /* //The following is outdated as of summer 2023, see the RK4Sim in ruge_kuttaCUDA for the used simulation function
 template <class T> void rk4sys(const T & timeInitial, const T & timeFinal, T *times, const elements<T> & y0, T stepSize, elements<T> *y_new, 
@@ -297,7 +301,7 @@ void callRK(Child individual, double absTolInput, const cudaConstants* cConstant
 
 // Called by optimize() in optimization.cu
 //void callRK(const int numThreads, const int blockThreads, Child *generation, double timeInitial, double stepSize, double absTol, double & calcPerS, const cudaConstants* cConstant, PlanetInfo *marsLaunchCon) {
-void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double> & time_steps, std::vector<elements<double>> & y_steps, std::vector<double> & gamma_steps, std::vector<double> & tau_steps, std::vector<double> & accel_steps, std::vector<double> & fuel_steps, double timeInitial) {
+void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double>* marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) {
 
     //which (if any) of these do we need to reset here?
     individual.simStatus = INITIAL_SIM;
@@ -336,7 +340,7 @@ void callRK(Child & individual, double absTolInput, const cudaConstants* cConsta
     individual.getOrbitSpeedDiff(cConstant);
 
     for (int j = 0; j < cConstant->missionObjectives.size(); j++) {
-        individual.objTargetDiffs[j] = abs(individual.getParameters(cConstant->missionObjectives[j]) - cConstant->missionObjectives[j].target);
+        individual.objTargetDiffs[j] = abs(individual.getParameters(cConstant, cConstant->missionObjectives[j]) - cConstant->missionObjectives[j].target);
     }
 
     //Get progress now that all of the outputs are ready
@@ -348,7 +352,7 @@ void callRK(Child & individual, double absTolInput, const cudaConstants* cConsta
 // This should be used when we don't need a MATLAB output
 void callRKBasic(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double timeInitial) {
     std::vector<double> time_steps(0,0);
-    std::vector<elements<double>> y_steps(0,0);
+    std::vector<elements<double>> y_steps;
     std::vector<double> gamma_steps(0,0); 
     std::vector<double> tau_steps(0,0); 
     std::vector<double> accel_steps(0,0);
@@ -381,7 +385,8 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
         //If not, run the next simulation and increase the sim num to reflect this
         individual.simNum++;
         
-        rkParameters<double> rkParameters = individual.startParams; // get the parameters for this thread
+        rkParameters<double> rkParams;
+        rkParams = individual.curState.getSimVal(cConstant); // get the parameters for this thread
 
         // storing copies of the input values
         double stepSize;
@@ -408,7 +413,7 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
             //Set the start time to the total trip time
             startTime = curTime;
             // start with the initial conditions of the spacecraft
-            curPos = rkParameters.y0; 
+            curPos = rkParams.y0; 
 
             massFuelSpent = 0; // mass of total fuel expended (kg) starts at 0
         }
@@ -430,19 +435,19 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
         if(individual.simStatus == INSIDE_SOI) {
             //If this is a mission inside a SOI, set the final to be a gravAssistTime difference from the start time
             endTime = startTime + cConstant->gravAssistTime;
-            //endTime = startTime + ((rkParameters.tripTime - startTime) * cConstant->gravAssistTimeFrac);
+            //endTime = startTime + ((rkParams.tripTime - startTime) * cConstant->gravAssistTimeFrac);
 
             //Calculate the entry angular momentum
-            soiEntryh = rkParameters.y0.r * rkParameters.y0.vtheta;
+            soiEntryh = rkParams.y0.r * rkParams.y0.vtheta;
 
             //Check to make sure that endTime is not further than tripTime
-            if(endTime > rkParameters.tripTime) {
-                endTime = rkParameters.tripTime;
+            if(endTime > rkParams.tripTime) {
+                endTime = rkParams.tripTime;
             }
         }
         //In all other scenerios, the end time is the triptime
         else {
-            endTime = rkParameters.tripTime;
+            endTime = rkParams.tripTime;
         }
 
         thruster<double> thrust(cConstant);
@@ -465,16 +470,16 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
             }
             else {
                 //Calc if the thruster is activated
-                coast = calc_coast(rkParameters.coeff, curTime, rkParameters.tripTime, thrust);
+                coast = calc_coast(rkParams.coeff, curTime, rkParams.tripTime, thrust);
                 
                 //Calc current step's acceleration
                 curAccel = calc_accel(curPos.r, curPos.z, thrust, massFuelSpent, stepSize, coast, static_cast<double>(cConstant->wet_mass), cConstant);
                 
                 //Record the gamma value of the current step
-                gamma_steps.push_back(calc_gamma(individual.startParams.coeff, curTime, rkParameters.tripTime));
+                gamma_steps.push_back(calc_gamma(individual.curParams.coeff, curTime, rkParams.tripTime));
 
                 //Record the tau value of the current step
-                tau_steps.push_back(calc_tau(individual.startParams.coeff, curTime, rkParameters.tripTime));
+                tau_steps.push_back(calc_tau(individual.curParams.coeff, curTime, rkParams.tripTime));
 
                 //Update the child with how much fuel it has used 
                 individual.fuelSpent = massFuelSpent;
@@ -486,7 +491,7 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
             //Needs to be triptime - curtime to get the correct index for mars
             //when curtime = triptime, this will give us the final position of mars at impact
             //this is because getConditionDev takes in seconds before the spacecraft reaches the target
-            elements<double> mars = getConditionDev(rkParameters.tripTime - curTime, cConstant, marsLaunchCon);
+            elements<double> mars = getConditionDev(rkParams.tripTime - curTime, cConstant, marsLaunchCon);
 
             //calculate the distance between mars and the spacecraft (|R|^2)
             double marsCraftDist = sqrt(pow(mars.r, 2) + pow(curPos.r, 2) + pow(curPos.z - mars.z, 2) - (2*curPos.r*mars.r*cos(mars.theta-curPos.theta)));
@@ -498,7 +503,7 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
             }
             
             // calculate k values and get new value of y
-            rkCalc(curTime, rkParameters.tripTime, stepSize, curPos, rkParameters.coeff, curAccel, error, mars, marsCraftDist); 
+            rkCalc(curTime, rkParams.tripTime, stepSize, curPos, rkParams.coeff, curAccel, error, mars, marsCraftDist); 
 
             curTime += stepSize; // update the current time in the simulation
             
@@ -594,7 +599,7 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
         } // end while (curTime < endTime)
 
         //Check to see if this simulation has completed its total runtime
-        if (endTime >= rkParameters.tripTime) {
+        if (endTime >= rkParams.tripTime) {
             //If here, the individual's simulation has completely ended, regardless of its current simStatus
             
             //Give the child its final calculated position

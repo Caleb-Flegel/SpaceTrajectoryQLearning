@@ -1,9 +1,13 @@
 #include<vector>
 #include<string>
-#include <random>   // for std::mt19937_64 object
+#include<random>   // for std::mt19937_64 object
+#include<array>
 #include"../Config_Constants/constants.h"
 #include"../Runge_Kutta/rkParameters.h"
 #include"../Motion_Eqns/elements.h"
+#include "../Planet_calculations/planetInfo.h"
+
+
 
 State::State() {
  //Set all increment values in the stateParams array to 0
@@ -209,10 +213,10 @@ std::vector<std::string> State::getPossibleActions(const cudaConstants * cConsta
 }
 
 //Calculates a new state based on a (non simulate) selected action
-std::array<int, OPTIM_VARS> State::getNewState(const std::string& action){
+std::vector<int> State::getNewState(const std::string& action){
     //Based on the action increment or decrement the respective var increment value
     //  update class's stateParams array
-    std::array<int, OPTIM_VARS> newParams;
+    std::vector<int> newParams;
 
     //Copy stateParams into newParams
     for (int i = 0; i < OPTIM_VARS; i++){
@@ -345,13 +349,13 @@ std::array<int, OPTIM_VARS> State::getNewState(const std::string& action){
 }
 
 //Calculates simulation params based on the current state increments
-rkParameters<double> State::getSimVal(const cudaConstants * cConstants){
+rkParameters<double> State::getSimVal(const cudaConstants * cConstants) const{
     //Create new rkParams var
     //Use cConstants->minSimVals, cConstants->maxSimVals, and cConstants->numIncrements to calculate the value of each increment 
     //Multiply the increment value by the number of increments for the variable to calculate the actual value of the state 
     //Do this for 19 optim vars
     //use these to calculate rkParams.y0 (see child.cpp constructor)
-    rkParameters<double> calcParams();
+    rkParameters<double> calcParams;
 
     //Var to store the increment value     
     double incVal = 0;
@@ -433,4 +437,4 @@ rkParameters<double> State::getSimVal(const cudaConstants * cConstants){
         earth.vz+sin(calcParams.zeta)*cConstants->v_escape);
 
     return calcParams;
-};
+}

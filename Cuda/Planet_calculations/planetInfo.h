@@ -104,10 +104,10 @@ elements<double> planetInitial_incremental(double timeInitial, double tripTime,c
 // NOTE: This is a device version of getCondition -> if changes are made to getCondition, you will likely want to make them here too 
  elements<double> getConditionDev(const double & currentTime, const cudaConstants * cConstants, const elements<double>* planetConditions);
 
-
-#include "planetInfo.cpp"
 // Global variable for launchCon (assigned content in optimization.cu)
 PlanetInfo *launchCon;
 PlanetInfo *marsLaunchCon;
+
+#include "planetInfo.cpp"
 
 #endif

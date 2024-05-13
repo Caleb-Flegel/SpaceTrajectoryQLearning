@@ -5,7 +5,7 @@
 #include <direct.h>
 #include <algorithm> // for std::sort() (needed for Tesla machine only)
 #include "math.h"
-#include "..\Genetic_Algorithm\sort.h"
+// #include "..\Genetic_Algorithm\sort.h"
 
 //Constructor for the output struct
 output::output(const cudaConstants* cConstants, const std::string& selectFolder) {
