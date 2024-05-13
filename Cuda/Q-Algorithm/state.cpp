@@ -10,7 +10,8 @@
 
 
 State::State() {
- //Set all increment values in the stateParams array to 0
+    stateParams.reserve(OPTIM_VARS);
+    //Set all increment values in the stateParams array to 0
     for (int i = 0; i < OPTIM_VARS; i++){
         stateParams[i] = 0;
     }
@@ -18,8 +19,14 @@ State::State() {
 
 State::State(const cudaConstants * cConstants, std::mt19937_64 & rng) {
     //Randomly set all increment values in the stateParams
+    stateParams.reserve(OPTIM_VARS);
+    std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE RNG-_-_-_-_-_-_-_-_-_\n\n";
+    std::cout << "\n\n_-_-_-_-_-_-_-_-_-" << cConstants->num_increments << "-_-_-_-_-_-_-_-_-_\n\n";
+    std::cout << "\n\n_-_-_-_-_-_-_-_-_-" << stateParams.size() << "-_-_-_-_-_-_-_-_-_\n\n";
     for (int i = 0; i < OPTIM_VARS; i++){
-        stateParams[i] = rng() % cConstants->num_increments;
+        int newVal = rng() % cConstants->num_increments;
+        std::cout << "\n\n_-_-_-_-_-_-_-_-_-NEW VAL:" << newVal << "-_-_-_-_-_-_-_-_-_\n\n";
+        stateParams[i] = newVal;
     }
 }
 
@@ -217,6 +224,7 @@ std::vector<int> State::getNewState(const std::string& action){
     //Based on the action increment or decrement the respective var increment value
     //  update class's stateParams array
     std::vector<int> newParams;
+    newParams.reserve(OPTIM_VARS);
 
     //Copy stateParams into newParams
     for (int i = 0; i < OPTIM_VARS; i++){

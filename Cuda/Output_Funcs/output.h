@@ -36,7 +36,7 @@ struct output
     // Inputs: Passed to printBestAdults(), recordGenerationPerformance(), recordGenSimple(), and recordAllIndividuals()
     //              See those functions' header files for detail on how the inputs are used
     // Outputs: The functions lised above will be called depending on the current generation and cConstants's write frequency variables
-    void printGeneration(const cudaConstants * cConstants, const std::vector<Adult>& allAdults, const std::vector<double>& objectiveAvgValues, const int& generation, const double& new_anneal, int& errorNum, const int& duplicateNum, const int& totAssoc, const int & minSteps, const int & avgSteps, const int & maxSteps, const double& minDist, const double& avgDist, const double& maxDist, const double& avgAge, const int& oldestAge, const double& avgBirthday, const int& oldestBirthday, const float& avgGenTime); 
+    void printGeneration(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, const int& generation); 
 
     // Function will handle printing at the end of a run
     // Inputs: Passed to recordAllIndividuals(), printBestAdults(), reportRun(), & finalRecord()
@@ -85,14 +85,15 @@ struct output
     //         avgBirthday - the non-generation-adjusted average generation age
     //         oldestBirthday - the non-generation-adjusted oldest generation age
     // output: genPerformanceT-[time_seed].csv is appended parameter information on the best individual in pool
-    void recordGenerationPerformance(const cudaConstants * cConstants, std::vector<Adult> adults, const std::vector<double>& objectiveAvgValues, const int& generation, const double& new_anneal, const int& errorNum, const int& duplicateNum, const int& totAssoc, const int & minSteps, const int & avgSteps, const int & maxSteps, const double& minDist, const double& avgDist, const double& maxDist, const double& avgAge, const int& oldestAge, const double& avgBirthday, const int& oldestBirthday, const float& avgGenTime);
+    //void recordGenerationPerformance(const cudaConstants * cConstants, std::vector<Adult> adults, const std::vector<double>& objectiveAvgValues, const int& generation, const double& new_anneal, const int& errorNum, const int& duplicateNum, const int& totAssoc, const int & minSteps, const int & avgSteps, const int & maxSteps, const double& minDist, const double& avgDist, const double& maxDist, const double& avgAge, const int& oldestAge, const double& avgBirthday, const int& oldestBirthday, const float& avgGenTime);
+    void recordGenerationPerformance(const cudaConstants * cConstants, const Child& best, const Child& cur, const int& generation);
 
     // Record highlights of the full genPerformance file
     //  Note: assumes initializeRecord() has been called
     // Inputs: cConstants - the cudaConstants, used to access objectives
     //         adults - A vector of adults which is used to pull the best adults from; not passed by reference to maintain the rank-distance sort of the original vector
     // Output: The essential stats for the generation's best adult is added to simpleGenPerformance
-    void recordGenSimple (const cudaConstants* cConstants, std::vector<Adult> adults, const std::vector<double>& objectiveAvgValues, const int& generation);
+    //void recordGenSimple (const cudaConstants* cConstants, std::vector<Adult> adults, const std::vector<double>& objectiveAvgValues, const int& generation);
 
     // Takes in a vector of adults and records the parameter info on all individuals
     // input: name - the desired name of the output, will be inserted into the file name
@@ -100,7 +101,7 @@ struct output
     //        adults - vector of adults that will be recorded
     //        generation - used in deriving file name
     // output: file generation#[generation]-[time_seed].csv is created with each row holding parameter values of individuals
-    void recordAllIndividuals(std::string name, const cudaConstants * cConstants, const std::vector<Adult>& adults, const int& generation);
+    //void recordAllIndividuals(std::string name, const cudaConstants * cConstants, const std::vector<Adult>& adults, const int& generation);
 
     // Function which prints the general info of a run when its over
     // Inputs: cConstants - cuda constants, used for accessing seed and objectives
@@ -110,8 +111,10 @@ struct output
     //         generation - the final generation
     //         avgGenTime - the average time (in seconds) it took a generation to complete during the run
     // Output: a file with at-a-glance info of runs is appended to within Output_Files
-    void reportRun(const cudaConstants* cConstants, const std::vector<Adult>& oldAdults, const bool& converged, const int& generation, const float& avgGenTime); 
+    //void reportRun(const cudaConstants* cConstants, const std::vector<Adult>& oldAdults, const bool& converged, const int& generation, const float& avgGenTime); 
+    void reportRun(const cudaConstants* cConstants, const Child& best, const Child& cur, const bool& converged, const int& generation, const float& avgGenTime);
 
+/*
     // Main Output, final results of genetic algorithm
     // input: x[] - array of OPTIM_VARS for a single individual
     //        generation - generation num of individual        
@@ -137,7 +140,7 @@ struct output
     //         Etot_avg - array of average mechanical energy between time steps (J)
     // Used to fill orbitalMotion{}.bin
     void errorCheck(double *time, elements<double> *yp,  double *gamma,  double *tau, int & lastStep, double *accel, double *fuelSpent, const double & wetMass, double *work, double *dE, double *Etot_avg, const cudaConstants* config, elements<double> *mars);
-
+*/
     // method that stores information of launchCon of timeRes*24 resolution
     // input: cConstants - access time range and resolution info
     //        launchCon (global variable) - access elements of planet 
@@ -166,13 +169,13 @@ struct output
 //         numDuplicates - the number of duplicates found in this generation
 //         oldestBirthday - the oldest borthday from this generation
 // Output: the top individual for rank distance and for each objective will have their stats printed to the terminal
-void printBestAdults(const cudaConstants* cConstants, std::vector<Adult> adults, const int& generation, int& numErrors, const int& numDuplicates, const int& oldestBirthdayconst); 
+void printIndividual(const cudaConstants* cConstants, const Child& ind, const int& generation); 
 
 // Utility function to display the currently best individual onto the terminal while the algorithm is still running
 // input:  Individual to be displayed (assumed to be the best individual of the pool) 
 //         objectives - the program's current list of objectives
 // output: display each objective's parameters for the passed in individual
-void terminalDisplay(const Adult& individual, const std::vector<objective> objectives, const cudaConstants* cConstants);
+void terminalDisplay(const Child& individual, const std::vector<objective> objectives, const cudaConstants* cConstants);
 
 #include "output.cpp"
 

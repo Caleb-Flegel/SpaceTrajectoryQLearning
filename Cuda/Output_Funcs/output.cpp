@@ -23,11 +23,14 @@ output::output(const cudaConstants* cConstants, const std::string& selectFolder)
 }
 
 //Call the functions which print during a run
-void output::printGeneration(const cudaConstants * cConstants, const std::vector<Adult>& allAdults, const std::vector<double>& objectiveAvgValues, const int& generation, const double& new_anneal, int& errorNum, const int& duplicateNum, const int& totAssoc, const int & minSteps, const int & avgSteps, const int & maxSteps, const double& minDist, const double& avgDist, const double& maxDist, const double& avgAge, const int& oldestAge, const double& avgBirthday, const int& oldestBirthday, const float& avgGenTime) {
+void output::printGeneration(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, const int& generation, const float& avgGenTime) {
   
   //Check to see if the best adults should be printed to the terminal on this generation
   if (generation % cConstants->disp_freq == 0) {
-    printBestAdults(cConstants, allAdults, generation, errorNum, duplicateNum, oldestBirthday);
+    std::cout << "\nBest Individual:";
+    printIndividual(cConstants, bestInd, generation);
+    std::cout << "\nCurrent Individual:";
+    printIndividual(cConstants, curInd, generation);
   }
 
   //The next prints should only occur if record mode is on
@@ -35,42 +38,45 @@ void output::printGeneration(const cudaConstants * cConstants, const std::vector
 
     //Check which sees if this is a write_freq generation
     if (generation % cConstants->write_freq == 0) {
-
       //Push info to the function which prints the full genPerformance file
-      recordGenerationPerformance(cConstants, allAdults, objectiveAvgValues, generation, new_anneal, errorNum, duplicateNum, totAssoc, minSteps, avgSteps, maxSteps, minDist, avgDist, maxDist, avgAge, oldestAge, avgBirthday, oldestBirthday, avgGenTime);
+      recordGenerationPerformance(cConstants, bestInd, curInd, generation);
       //Push info to the function which prints the simplified genPerformance file
       //recordGenSimple(cConstants, allAdults, objectiveAvgValues, generation);
     }
 
-    //Check which sees if the full adult list should be printed
-    if (generation % cConstants->all_write_freq == 0) {
+    // //Check which sees if the full adult list should be printed
+    // if (generation % cConstants->all_write_freq == 0) {
 
-      //Call the function which prints all adults for this generation into a new file
-      recordAllIndividuals("AllAdults", cConstants, allAdults, generation);
-    }
+    //   //Call the function which prints all adults for this generation into a new file
+    // recordAllIndividuals("AllAdults", cConstants, allAdults, generation);
+    // }
   }
 }
 
 //Function will handle printing at the end of a run
-void output::printFinalGen(const cudaConstants * cConstants, std::vector<Adult>& allAdults, GPUMem & gpuValues, const bool& converged, const int& generation, int& errorNum, const int& duplicateNum, const int& oldestBirthday, const float& avgGenTime) {
+void output::printFinalGen(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, GPUMem & gpuValues, const bool& converged, const int& generation, const float& avgGenTime) {
   //Call for a print of allIndividuals if in record mode and if it is not a report generation already
   //  Note: second check is simply so redundant files aren't created
-  if ((cConstants->record_mode == true) && (generation % cConstants->all_write_freq != 0)) {
-    //Print the adults of this final generation
-    recordAllIndividuals("AllAdults", cConstants, allAdults, generation);
-  }
+  // if ((cConstants->record_mode == true) && (generation % cConstants->all_write_freq != 0)) {
+  //   //Print the adults of this final generation
+  //   recordAllIndividuals("AllAdults", cConstants, allAdults, generation);
+  // }
 
   //Print the best adults for the last generation to the console
-  printBestAdults(cConstants, allAdults, generation, errorNum, duplicateNum, oldestBirthday);
+  std::cout << "\nBest Individual:";
+  printIndividual(cConstants, bestInd, generation);
+  std::cout << "\nCurrent Individual:";
+  printIndividual(cConstants, curInd, generation);
 
   //Print the result of the run to the combined run result file
-  reportRun(cConstants, allAdults, converged, generation, avgGenTime);
+  reportRun(cConstants, bestInd, curInd, converged, generation, avgGenTime);
 
   //Check to see if there is a convergence before printing the trajectory
   //if (converged) {
       //Sort the adults by progress so the bin file is made for the confirmed converged adult
-      std::sort(allAdults.begin(), allAdults.end(), bestProgress); 
+      // std::sort(allAdults.begin(), allAdults.end(), bestProgress); 
 
+      //TODO: Fix this here and in setting it up
       // Evaluate and print this solution's information to binary files
       trajectoryPrint(generation, cConstants, allAdults[0], gpuValues);
   //}
@@ -92,23 +98,28 @@ void output::initializeGenPerformance(const cudaConstants * cConstants) {
 
   //Names for each objective
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << "algorithmBest" << cConstants->missionObjectives[i].name << ",";
-  }
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << "algorithmBest" << cConstants->missionObjectives[i].name << "Difference,";
-  }
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << "algorithmBest" << cConstants->missionObjectives[i].name << "Normalization,";
-  }
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
     excelFile << "best" << cConstants->missionObjectives[i].name << ",";
-    excelFile << "avg" << cConstants->missionObjectives[i].name << ",";
   }
-
-  excelFile << "totalRanks,refPointsUsed,anneal,avgParentProgress,progress,parentChildProgressRatio,minDistance,avgDistance,maxDistance,avgGenTime,minSteps,avgSteps,maxSteps,errorNum,duplicateNum,avgAge,oldestAge,bestAdultAge,avgBirthday,oldestBirthday,bestAdultBirthday,alpha,beta,zeta,tripTime,";
+  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+    excelFile << "best" << cConstants->missionObjectives[i].name << "Difference,";
+  }
+  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+    excelFile << "current" << cConstants->missionObjectives[i].name << ",";
+  }
+  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+    excelFile << "current" << cConstants->missionObjectives[i].name << "Difference,";
+  }
+  // for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+  //   excelFile << "algorithmBest" << cConstants->missionObjectives[i].name << "Normalization,";
+  // }
+  // for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+  //   excelFile << "best" << cConstants->missionObjectives[i].name << ",";
+  //   excelFile << "avg" << cConstants->missionObjectives[i].name << ",";
+  // }
   
+  excelFile << "bestProg,beststeps,bestalpha,bestbeta,bestzeta";
   for (int i = 0; i < GAMMA_ARRAY_SIZE; i++) {
-    excelFile << "gamma"; 
+    excelFile << "bestgamma"; 
     if (i == 0) {
       excelFile << "_a" << i << ",";
     }
@@ -120,7 +131,7 @@ void output::initializeGenPerformance(const cudaConstants * cConstants) {
     }
   }
   for (int i = 0; i < TAU_ARRAY_SIZE; i++) {
-    excelFile << "tau"; 
+    excelFile << "besttau"; 
     if (i == 0) {
       excelFile << "_a" << i << ",";
     }
@@ -132,7 +143,45 @@ void output::initializeGenPerformance(const cudaConstants * cConstants) {
     }
   }
   for (int i = 0; i < COAST_ARRAY_SIZE; i++) {
-    excelFile << "psi"; 
+    excelFile << "bestpsi"; 
+    if (i == 0) {
+      excelFile << "_a" << i << ",";
+    }
+    else if (i % 2 == 0) {
+      excelFile << "_b" << i/2 << ",";
+    }
+    else {
+      excelFile << "_a" << (i+1)/2 << ",";
+    }
+  }
+
+  excelFile << "curProg,cursteps,curalpha,curbeta,curzeta";
+  for (int i = 0; i < GAMMA_ARRAY_SIZE; i++) {
+    excelFile << "curgamma"; 
+    if (i == 0) {
+      excelFile << "_a" << i << ",";
+    }
+    else if (i % 2 == 0) {
+      excelFile << "_b" << i/2 << ",";
+    }
+    else {
+      excelFile << "_a" << (i+1)/2 << ",";
+    }
+  }
+  for (int i = 0; i < TAU_ARRAY_SIZE; i++) {
+    excelFile << "curtau"; 
+    if (i == 0) {
+      excelFile << "_a" << i << ",";
+    }
+    else if (i % 2 == 0) {
+      excelFile << "_b" << i/2 << ",";
+    }
+    else {
+      excelFile << "_a" << (i+1)/2 << ",";
+    }
+  }
+  for (int i = 0; i < COAST_ARRAY_SIZE; i++) {
+    excelFile << "curpsi"; 
     if (i == 0) {
       excelFile << "_a" << i << ",";
     }
@@ -149,35 +198,35 @@ void output::initializeGenPerformance(const cudaConstants * cConstants) {
   excelFile.close();
 }
 
-// Initialize simpleGenPerformance with header rows
-void output::initializeSimpleGenPerformance(const cudaConstants* cConstants) {
+// // Initialize simpleGenPerformance with header rows
+// void output::initializeSimpleGenPerformance(const cudaConstants* cConstants) {
   
-  std::ofstream excelFile;
-  int seed = cConstants->time_seed;
+//   std::ofstream excelFile;
+//   int seed = cConstants->time_seed;
   
-  // setting the numeric id tag as the randomization seed (when doing runs of various properties, suggested to add other values to differentiate)
-  std::string fileId = std::to_string(seed);
+//   // setting the numeric id tag as the randomization seed (when doing runs of various properties, suggested to add other values to differentiate)
+//   std::string fileId = std::to_string(seed);
 
-  //Create the new genPerformance file
-  excelFile.open(outputPath + "simpleGenPerformance-" + fileId + ".csv", std::ios_base::app);
+//   //Create the new genPerformance file
+//   excelFile.open(outputPath + "simpleGenPerformance-" + fileId + ".csv", std::ios_base::app);
 
-  //Generation and progress
-  excelFile << "gen,Rank-Rarity Progress,";
+//   //Generation and progress
+//   excelFile << "gen,Rank-Rarity Progress,";
 
-  //Names for each objective
+//   //Names for each objective
 
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << "rankRarity" << cConstants->missionObjectives[i].name << ",";
-  }
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << "best" << cConstants->missionObjectives[i].name << ",";
-    excelFile << "avg" << cConstants->missionObjectives[i].name << ",";
-  }
+//   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+//     excelFile << "rankRarity" << cConstants->missionObjectives[i].name << ",";
+//   }
+//   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+//     excelFile << "best" << cConstants->missionObjectives[i].name << ",";
+//     excelFile << "avg" << cConstants->missionObjectives[i].name << ",";
+//   }
 
-  //End the line and close the file
-  excelFile << "\n";
-  excelFile.close();
-}
+//   //End the line and close the file
+//   excelFile << "\n";
+//   excelFile.close();
+// }
 
 // Checks if needed output files exist, creates them if they don't exist, and copies the run's config files to them
 void output::prepareFolders(const cudaConstants* cConstants) {
@@ -248,7 +297,7 @@ void output::copyFile (const std::string& source, const std::string& destination
 
 //!--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Take in the current state of the generation and appends to excel file, assumes initializeRecord() had already been called before (no need to output a header row)
-void output::recordGenerationPerformance(const cudaConstants * cConstants, std::vector<Adult> adults, const std::vector<double>& objectiveAvgValues, const int& generation, const double& new_anneal, const int& errorNum, const int& duplicateNum, const int& totAssoc, const int & minSteps, const int & avgSteps, const int & maxSteps, const double& minDist, const double& avgDist, const double& maxDist, const double& avgAge, const int& oldestAge, const double& avgBirthday, const int& oldestBirthday, const float& avgGenTime) {
+void output::recordGenerationPerformance(const cudaConstants * cConstants, const Child& best, const Child& cur, const int& generation) {
   std::ofstream excelFile;
   int seed = cConstants->time_seed;
   std::string fileId = std::to_string(seed);
@@ -260,87 +309,48 @@ void output::recordGenerationPerformance(const cudaConstants * cConstants, std::
 
   //Output the best rank distance adult's parameters
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << adults[0].getParameters(cConstants->missionObjectives[i]) << ",";
+    excelFile << best.getParameters(cConstants->missionObjectives[i]) << ",";
   }
   //Output the best rank distance adult's differences
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << adults[0].objTargetDiffs[i] << ",";
+    excelFile << best.objTargetDiffs[i] << ",";
   }
-  //Output the best rank distance adult's normalizations
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << adults[0].normalizedObj[i] << ",";
+    excelFile << cur.getParameters(cConstants->missionObjectives[i]) << ",";
   }
-  
-  //Output the objective parameter for the best adult and the average for each objective
+  //Output the best rank distance adult's differences
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    //Sort the Adults vector by the parameter diff
-    std::sort (adults.begin(), adults.end(), [i] (Adult a, Adult b) {return a.objTargetDiffs[i] < b.objTargetDiffs[i];});
-    
-    //Output the 1st adult's value for that parameter, which will be the best of that value in the Adults vector
-    excelFile << adults[0].getParameters(cConstants->missionObjectives[i]) << ",";
-    
-    //Output the average value for this parameter
-    //The 
-    excelFile << objectiveAvgValues[i] << ",";
+    excelFile << cur.objTargetDiffs[i] << ",";
   }
 
-  //Reset the sort to rankRarity
-  // std::sort(adults.begin(), adults.end(), rankRaritySort);
-  mainSort(adults, cConstants, adults.size());
-
-  //Rank value
-  excelFile << adults[adults.size()-1].rank << ",";
-  
-  //Reference point associations
-  excelFile << totAssoc << ",";
-
-  //New anneal every gen
-  excelFile << new_anneal << ",";
-
-  //Progress values
-  excelFile << adults[0].avgParentProgress << ",";
-  excelFile << adults[0].progress << ",";
-  excelFile << adults[0].avgParentProgress/adults[0].progress << ",";
-
-  //Distance values
-  excelFile << minDist << ",";
-  excelFile << avgDist << ",";
-  excelFile << maxDist << ",";
-
-  //Avg generation time
-  excelFile << avgGenTime << ",";
-
-  //Step values
-  excelFile << minSteps << ",";
-  excelFile << avgSteps << ",";
-  excelFile << maxSteps << ",";
-
-  //Status Counts
-  excelFile << errorNum << ",";
-  excelFile << duplicateNum << ",";
-
-  //Age values
-  excelFile << avgAge << ",";
-  excelFile << oldestAge << ",";
-  excelFile << generation - adults[0].birthday << ",";
-  excelFile << avgBirthday << ",";
-  excelFile << oldestBirthday << ",";
-  excelFile << adults[0].birthday << ",";
-
-  // Record best individual's parameters
-  excelFile << adults[0].startParams.alpha << ",";
-  excelFile << adults[0].startParams.beta << ",";
-  excelFile << adults[0].startParams.zeta << ",";
-  excelFile << adults[0].startParams.tripTime << ",";
-
+  excelFile << best.progress << ",";
+  excelFile << best.stepCount << ",";
+  excelFile << best.curParams.alpha << ",";
+  excelFile << best.curParams.beta << ",";
+  excelFile << best.curParams.zeta << ",";
   for (int i = GAMMA_OFFSET; i < GAMMA_ARRAY_SIZE + GAMMA_OFFSET; i++) {
-    excelFile << adults[0].startParams.coeff.gamma[i-GAMMA_OFFSET] << ","; 
+    excelFile << best.curParams.coeff.gamma[i-GAMMA_OFFSET] << ","; 
   }
   for (int i = TAU_OFFSET; i < TAU_ARRAY_SIZE + TAU_OFFSET; i++) {
-    excelFile << adults[0].startParams.coeff.tau[i-TAU_OFFSET] << ","; 
+    excelFile << best.curParams.coeff.tau[i-TAU_OFFSET] << ","; 
   }
   for (int i = COAST_OFFSET; i < COAST_ARRAY_SIZE + COAST_OFFSET; i++) {
-    excelFile << adults[0].startParams.coeff.coast[i-COAST_OFFSET] << ","; 
+    excelFile << bets.curParams.coeff.coast[i-COAST_OFFSET] << ","; 
+  } 
+
+  excelFile << cur.progress << ",";
+  excelFile << cur.stepCount << ",";
+  excelFile << cur.curParams.alpha << ",";
+  excelFile << cur.curParams.beta << ",";
+  excelFile << cur.curParams.zeta << ",";
+  for (int i = GAMMA_OFFSET; i < GAMMA_ARRAY_SIZE + GAMMA_OFFSET; i++) {
+    excelFile << cur.curParams.coeff.gamma[i-GAMMA_OFFSET] << ","; 
+  }
+  for (int i = TAU_OFFSET; i < TAU_ARRAY_SIZE + TAU_OFFSET; i++) {
+    excelFile << cur.curParams.coeff.tau[i-TAU_OFFSET] << ","; 
+  }
+  for (int i = COAST_OFFSET; i < COAST_ARRAY_SIZE + COAST_OFFSET; i++) {
+    excelFile << cur.curParams.coeff.coast[i-COAST_OFFSET] << ","; 
   } 
 
   excelFile << "\n"; // End of row
@@ -348,123 +358,123 @@ void output::recordGenerationPerformance(const cudaConstants * cConstants, std::
   
 }
 
-// Record highlights of the full genPerformance file
-void output::recordGenSimple (const cudaConstants* cConstants, std::vector<Adult> adults, const std::vector<double>& objectiveAvgValues, const int& generation) {
-  //First open the output file
-  std::ofstream excelFile;
-  excelFile.open(outputPath + "simpleGenPerformance-" + std::to_string(static_cast<int>(cConstants->time_seed)) + ".csv", std::ios_base::app);
+// // Record highlights of the full genPerformance file
+// void output::recordGenSimple (const cudaConstants* cConstants, std::vector<Adult> adults, const std::vector<double>& objectiveAvgValues, const int& generation) {
+//   //First open the output file
+//   std::ofstream excelFile;
+//   excelFile.open(outputPath + "simpleGenPerformance-" + std::to_string(static_cast<int>(cConstants->time_seed)) + ".csv", std::ios_base::app);
 
-  //Output the generation and the progress of the best rank-distance adult
-  excelFile << generation << "," << adults[0].progress << ","; 
+//   //Output the generation and the progress of the best rank-distance adult
+//   excelFile << generation << "," << adults[0].progress << ","; 
 
-  //Output the best rank distance adult's parameters
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << adults[0].getParameters(cConstants->missionObjectives[i]) << ",";
-  }
-  //Output the objective parameter for the best adult and the average for each objective
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    //Sort the Adults vector by the parameter diff
-    std::sort (adults.begin(), adults.end(), [i] (Adult a, Adult b) {return a.objTargetDiffs[i] < b.objTargetDiffs[i];});
+//   //Output the best rank distance adult's parameters
+//   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+//     excelFile << adults[0].getParameters(cConstants->missionObjectives[i]) << ",";
+//   }
+//   //Output the objective parameter for the best adult and the average for each objective
+//   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+//     //Sort the Adults vector by the parameter diff
+//     std::sort (adults.begin(), adults.end(), [i] (Adult a, Adult b) {return a.objTargetDiffs[i] < b.objTargetDiffs[i];});
     
-    //Output the 1st adult's value for that parameter, which will be the best of that value in the Adults vector
-    excelFile << adults[0].getParameters(cConstants->missionObjectives[i]) << ",";
-    //Output the average value for this parameter
-    excelFile << objectiveAvgValues[i] << ",";
-  }
+//     //Output the 1st adult's value for that parameter, which will be the best of that value in the Adults vector
+//     excelFile << adults[0].getParameters(cConstants->missionObjectives[i]) << ",";
+//     //Output the average value for this parameter
+//     excelFile << objectiveAvgValues[i] << ",";
+//   }
 
-  //Re-sort the adults in rank-rarity order
-  // std::sort(adults.begin(), adults.end(), rankRaritySort);
-  mainSort(adults, cConstants, adults.size());
+//   //Re-sort the adults in rank-rarity order
+//   // std::sort(adults.begin(), adults.end(), rankRaritySort);
+//   mainSort(adults, cConstants, adults.size());
 
-  //End the line for this generation and close the file
-  excelFile << "\n"; 
-  excelFile.close(); 
-}
+//   //End the line for this generation and close the file
+//   excelFile << "\n"; 
+//   excelFile.close(); 
+// }
 
-// Takes in an adult vector and records the parameter info on all individuals within the vector
-void output::recordAllIndividuals(std::string name, const cudaConstants * cConstants, const std::vector<Adult>& adults, const int& generation) {
+// // Takes in an adult vector and records the parameter info on all individuals within the vector
+// void output::recordAllIndividuals(std::string name, const cudaConstants * cConstants, const std::vector<Adult>& adults, const int& generation) {
   
-  std::ofstream outputFile;
-  outputFile.open(outputPath + std::to_string(static_cast<int>(cConstants->time_seed)) + "-" + name +"-gen#" + std::to_string(generation) + ".csv");
+//   std::ofstream outputFile;
+//   outputFile.open(outputPath + std::to_string(static_cast<int>(cConstants->time_seed)) + "-" + name +"-gen#" + std::to_string(generation) + ".csv");
 
-  // Setup the header row
-  outputFile << "position,";
+//   // Setup the header row
+//   outputFile << "position,";
 
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    outputFile << cConstants->missionObjectives[i].name << ",";
-  }
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    outputFile << cConstants->missionObjectives[i].name << "Difference,";
-  }
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    outputFile << cConstants->missionObjectives[i].name << "Normalization,";
-  }
+//   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+//     outputFile << cConstants->missionObjectives[i].name << ",";
+//   }
+//   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+//     outputFile << cConstants->missionObjectives[i].name << "Difference,";
+//   }
+//   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+//     outputFile << cConstants->missionObjectives[i].name << "Normalization,";
+//   }
   
-  outputFile << "rank,rarity,avgParentProgress,progress,parentChildProgressRatio,distance,assocRefPoint,numSteps,age,birthday,";
+//   outputFile << "rank,rarity,avgParentProgress,progress,parentChildProgressRatio,distance,assocRefPoint,numSteps,age,birthday,";
 
-  for (int i = 0; i < GAMMA_ARRAY_SIZE; i++) {
-    outputFile << "gamma" << i << ",";
-  }
-  for (int i = 0; i < TAU_ARRAY_SIZE; i++) {
-    outputFile << "tau" << i << ",";
-  }
-  outputFile << "alpha,beta,zeta,tripTime,";
-  for (int i = 0; i < COAST_ARRAY_SIZE; i++) {
-    outputFile << "coast" << i << ",";
-  }
+//   for (int i = 0; i < GAMMA_ARRAY_SIZE; i++) {
+//     outputFile << "gamma" << i << ",";
+//   }
+//   for (int i = 0; i < TAU_ARRAY_SIZE; i++) {
+//     outputFile << "tau" << i << ",";
+//   }
+//   outputFile << "alpha,beta,zeta,tripTime,";
+//   for (int i = 0; i < COAST_ARRAY_SIZE; i++) {
+//     outputFile << "coast" << i << ",";
+//   }
 
-  outputFile << '\n';
+//   outputFile << '\n';
 
-  outputFile << std::setprecision(20);
-  outputFile << std::fixed;
+//   outputFile << std::setprecision(20);
+//   outputFile << std::fixed;
 
-  // Record all individuals in the adults vector
-  for (int i = 0; i < adults.size(); i++) {
-    outputFile << i << ",";
+//   // Record all individuals in the adults vector
+//   for (int i = 0; i < adults.size(); i++) {
+//     outputFile << i << ",";
 
-    for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-      outputFile << adults[i].getParameters(cConstants->missionObjectives[j]) << ",";
-    }
-    for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-      outputFile << adults[i].objTargetDiffs[j] << ",";
-    }
-    for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-      outputFile << adults[i].normalizedObj[j] << ",";
-    }
+//     for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
+//       outputFile << adults[i].getParameters(cConstants->missionObjectives[j]) << ",";
+//     }
+//     for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
+//       outputFile << adults[i].objTargetDiffs[j] << ",";
+//     }
+//     for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
+//       outputFile << adults[i].normalizedObj[j] << ",";
+//     }
     
-    outputFile << adults[i].rank << ",";
-    outputFile << adults[i].rarity << ",";
-    outputFile << adults[i].avgParentProgress << ",";
-    outputFile << adults[i].progress << ",";
-    outputFile << adults[i].progress/adults[i].avgParentProgress << ",";
-    outputFile << adults[i].distance << ",";
-    outputFile << adults[i].associatedRefPoint << ",";
-    outputFile << adults[i].stepCount << ",";
-    outputFile << generation-adults[i].birthday << ",";
-    outputFile << adults[i].birthday << ",";
+//     outputFile << adults[i].rank << ",";
+//     outputFile << adults[i].rarity << ",";
+//     outputFile << adults[i].avgParentProgress << ",";
+//     outputFile << adults[i].progress << ",";
+//     outputFile << adults[i].progress/adults[i].avgParentProgress << ",";
+//     outputFile << adults[i].distance << ",";
+//     outputFile << adults[i].associatedRefPoint << ",";
+//     outputFile << adults[i].stepCount << ",";
+//     outputFile << generation-adults[i].birthday << ",";
+//     outputFile << adults[i].birthday << ",";
 
-    for (int j = 0; j < GAMMA_ARRAY_SIZE; j++) {
-      outputFile << adults[i].startParams.coeff.gamma[j] << ",";
-    }
-    for (int j = 0; j < TAU_ARRAY_SIZE; j++) {
-      outputFile << adults[i].startParams.coeff.tau[j] << ",";
-    }
-    outputFile << adults[i].startParams.alpha << ",";
-    outputFile << adults[i].startParams.beta << ",";
-    outputFile << adults[i].startParams.zeta << ",";
-    outputFile << adults[i].startParams.tripTime << ",";
-    for (int j = 0; j < COAST_ARRAY_SIZE; j++) {
-      outputFile << adults[i].startParams.coeff.coast[j] << ",";
-    }
-    outputFile << "\n";
-  }
-  outputFile.close();
-}
+//     for (int j = 0; j < GAMMA_ARRAY_SIZE; j++) {
+//       outputFile << adults[i].startParams.coeff.gamma[j] << ",";
+//     }
+//     for (int j = 0; j < TAU_ARRAY_SIZE; j++) {
+//       outputFile << adults[i].startParams.coeff.tau[j] << ",";
+//     }
+//     outputFile << adults[i].startParams.alpha << ",";
+//     outputFile << adults[i].startParams.beta << ",";
+//     outputFile << adults[i].startParams.zeta << ",";
+//     outputFile << adults[i].startParams.tripTime << ",";
+//     for (int j = 0; j < COAST_ARRAY_SIZE; j++) {
+//       outputFile << adults[i].startParams.coeff.coast[j] << ",";
+//     }
+//     outputFile << "\n";
+//   }
+//   outputFile.close();
+// }
 
 //!--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 // Function which prints the general info of a run when its over
-void output::reportRun(const cudaConstants* cConstants, const std::vector<Adult>& adults, const bool& converged, const int& generation, const float& avgGenTime) {
+void output::reportRun(const cudaConstants* cConstants, const Child& best, const Child& cur, const bool& converged, const int& generation, const float& avgGenTime) {
   //Open the runReport file
   std::ofstream output("..\\Output_Files\\runReports.csv", std::ios::app);
 
@@ -485,7 +495,7 @@ void output::reportRun(const cudaConstants* cConstants, const std::vector<Adult>
 
   //Create a key for the parameters, progress, and age 
   //Output basic adult stats
-  output << "R-D Position,Progress,Age";
+  output << "Type,Progress";
   //First output parameters
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
     //Output the objective name
@@ -494,29 +504,53 @@ void output::reportRun(const cudaConstants* cConstants, const std::vector<Adult>
   //End line to move on to reporting adults
   output << "\n";
 
-  //Report the top 3 rank-distance adults
-  for (int i = 0; i < 3; i++){
-    //Report their position, progress, and age
-    output << i << "," << adults[i].progress << "," << generation - adults[i].birthday; 
+  //Report their type and progress
+  output << "Best," << best.progress; 
 
-    //For each objective, print the adult's parameter
-    for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-      output << "," << adults[i].getParameters(cConstants->missionObjectives[j]);
-    }
-
-    //End line to move on to the next adult
-    output << "\n";
+  //For each objective, print the adult's parameter
+  for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
+    output << "," << best.getParameters(cConstants->missionObjectives[j]);
   }
+
+  //End line to move on to the next adult
+  output << "\n";
+  
+  //Report their type and progress
+  output << "Current," << best.progress; 
+
+  //For each objective, print the adult's parameter
+  for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
+    output << "," << cur.getParameters(cConstants->missionObjectives[j]);
+  }
+
+  //End line to move on to the next adult
+  output << "\n";
+
+  // //Report the top 3 rank-distance adults
+  // for (int i = 0; i < 3; i++){
+  //   //Report their position, progress, and age
+  //   output << "Best," << adults[i].progress; 
+
+  //   //For each objective, print the adult's parameter
+  //   for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
+  //     output << "," << best.getParameters(cConstants->missionObjectives[j]);
+  //   }
+
+  //   //End line to move on to the next adult
+  //   output << "\n";
+  // }
   //End line before closing to make space for the next run
   output << "\n";
   output.close();
 }
 
+
+/*
 // Main Output, final results of genetic algorithm
-void output::trajectoryPrint(int generation, const cudaConstants* cConstants, const Adult& best, GPUMem & gpuValues) {
-  /*set the target and inital conditions for the earth and spacecraft:
-  constructor takes in radial position(au), angluar position(rad), axial position(au),
-  radial velocity(au/s), tangential velocity(au/s), axial velocity(au/s)*/
+void output::trajectoryPrint(int generation, const cudaConstants* cConstants, const Child& cur) {
+  //set the target and inital conditions for the earth and spacecraft:
+  //constructor takes in radial position(au), angluar position(rad), axial position(au),
+  //radial velocity(au/s), tangential velocity(au/s), axial velocity(au/s)
 
   // setting landing conditions of the target (Sept 30, 2022)
   elements<double> target = elements<double>(cConstants->r_fin_target, cConstants->theta_fin_target, cConstants->z_fin_target, cConstants->vr_fin_target, cConstants->vtheta_fin_target, cConstants->vz_fin_target);
@@ -761,7 +795,7 @@ void output::errorCheck(double *time, elements<double> *yp,  double *gamma,  dou
   delete [] mass;
   delete [] Etot;
 }
-
+*/
 void output::recordEarthData(const cudaConstants * cConstants, const int & generation) {
   double timeStamp = cConstants->minSimVals[TRIPTIME_OFFSET]; // Start the timeStamp at the triptime min (closest to impact)
   // seed to hold time_seed value to identify the file
@@ -836,52 +870,52 @@ void output::recordReferencePoints(const cudaConstants * cConstants, const Refer
 //General Functions
 
 //Function which will print the best rank-distance adult and the best adult for each objective to the terminal
-void printBestAdults(const cudaConstants* cConstants, std::vector<Adult> adults, const int& generation, int& numErrors, const int& numDuplicates, const int& oldestBirthday) {
+void printIndividual(const cudaConstants* cConstants, const Child& ind, const int& generation) {
   // Prints the best individual's posDiff / speedDiff
 
   //Print the generation
   std::cout << "\n\nGeneration " << generation << " data:\n";
 
-  //Print the best adult for each objective
-  for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-      //Sort the adults array by the correct parameter & order
-      std::sort (adults.begin(), adults.end(), [i] (Adult a, Adult b) {return a.objTargetDiffs[i] < b.objTargetDiffs[i];});
+  // //Print the best adult for each objective
+  // for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
+  //     //Sort the adults array by the correct parameter & order
+  //     std::sort (adults.begin(), adults.end(), [i] (Adult a, Adult b) {return a.objTargetDiffs[i] < b.objTargetDiffs[i];});
 
-      //Print the name of the objective
-      std::cout << "\nBest " << cConstants->missionObjectives[i].name << " Individual:";
-      //Display the info to the terminal
-      terminalDisplay(adults[0], cConstants->missionObjectives, cConstants);
-  }
+  //     //Print the name of the objective
+  //     std::cout << "\nBest " << cConstants->missionObjectives[i].name << " Individual:";
+  //     //Display the info to the terminal
+  //     terminalDisplay(adults[0], cConstants->missionObjectives, cConstants);
+  // }
 
   //display to the terminal the best individual based on rankRarity
-  std::cout << "\nBest Overall Individual:";
+  // std::cout << "\nIndividual:";
 
-  // std::sort(adults.begin(), adults.end(), rankRaritySort);
-  mainSort(adults, cConstants, adults.size());
+  // // std::sort(adults.begin(), adults.end(), rankRaritySort);
+  // mainSort(adults, cConstants, adults.size());
 
-  terminalDisplay(adults[0], cConstants->missionObjectives, cConstants);
+  terminalDisplay(ind, cConstants->missionObjectives, cConstants);
 
   //Display number of errors
-  std::cout << "\n# of errors this generation: " << numErrors;
+  // std::cout << "\n# of errors this generation: " << numErrors;
 
   //Display number of duplicates
-  std::cout << "\n# of duplicates this generation: " << numDuplicates << "\n";
+  // std::cout << "\n# of duplicates this generation: " << numDuplicates << "\n";
   
   //Display the number of the max rank
-  std::cout << "\nMax rank this generation: " << adults[adults.size()-1].rank;
+  // std::cout << "\nMax rank this generation: " << adults[adults.size()-1].rank;
 
   //display the oldest individual
-  std::cout << "\nOldest age adult: " << generation - oldestBirthday << "\n";
+  // std::cout << "\nOldest age adult: " << generation - oldestBirthday << "\n";
 
   //Display the steps taken by the best individual
-  std::cout << "\nBest step count: " << adults[0].stepCount << "\n";
+  // std::cout << "\nBest step count: " << adults[0].stepCount << "\n";
 
   //Display the progress of the best rank distance individual 
-  std::cout << "\nBest adult progress: " << adults[0].progress << "\n\n";
+  std::cout << "\nCurrent progress: " << ind.progress << "\n\n";
 }
 
 // Utility function to display the currently best individual onto the terminal while the algorithm is still running
-void terminalDisplay(const Adult& individual, const std::vector<objective> objectives, const cudaConstants* cConstants) {
+void terminalDisplay(const Child& individual, const std::vector<objective> objectives, const cudaConstants* cConstants) {
     
   //Print the parameters for each of the objectives for the passed in individual
   for (int i = 0; i < objectives.size(); i++) {
@@ -891,17 +925,17 @@ void terminalDisplay(const Adult& individual, const std::vector<objective> objec
     //Print the difference
     std::cout << "\n\t\t" << "Diff. from target: " << individual.objTargetDiffs[i];
 
-    //Print the normalization of the objective if the run is using rank-rarity
-    if (cConstants->algorithm == RANK_RARITY) {
-      std::cout << "\n\t\t" << objectives[i].name << " normalization: " << individual.normalizedObj[i];
-    }
+    // //Print the normalization of the objective if the run is using rank-rarity
+    // if (cConstants->algorithm == RANK_RARITY) {
+    //   std::cout << "\n\t\t" << objectives[i].name << " normalization: " << individual.normalizedObj[i];
+    // }
     
   }
 
-  //Print the distance of the adult if the run is using rank-distance
-  if (cConstants->algorithm == RANK_DISTANCE) {
-     std::cout << "\n\tDistance: " << individual.distance;
-  }
+  // //Print the distance of the adult if the run is using rank-distance
+  // if (cConstants->algorithm == RANK_DISTANCE) {
+  //    std::cout << "\n\tDistance: " << individual.distance;
+  // }
 
   std::cout << std::endl;
 }

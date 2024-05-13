@@ -13,6 +13,9 @@ cudaConstants::cudaConstants() {
     //  If the user specifies an algorithm, it will be set from the genetic.config file read
     // algorithm = UNSPECIFIED;
 
+    this->maxSimVals.reserve(OPTIM_VARS);
+    this->minSimVals.reserve(OPTIM_VARS);
+
     // Get values from the genetic config file
     FileRead("../Config_Constants/genetic.config");
     // Get values from the mission config file
@@ -564,9 +567,11 @@ void cudaConstants::importObjective(std::string line) {
 std::ostream& operator<<(std::ostream& os, const cudaConstants& object) {
     os << std::setprecision(12);
     os << "\n==========CONFIG=DATA===============================================================================\n";
-    os << "Genetic Algorithm Related Values:\n";
+    os << "Q Algorithm Related Values:\n";
     os << "\ttime_seed: "       << object.time_seed       << "\n";
     os << "\tmax_generations: "  << object.max_generations   << "\trun_count: "          << object.run_count         << "\n\n";
+    os << "\tnum_increments: " << object.num_increments << "\n\n";
+    os << "\talpha: " << object.alpha << "\tepsilon: " << object.epsilon << "\tgamma: " << object.gamma << "\n\n"; 
 
     os << "Runge-Kutta Related Values:\n";
     os << "\trk_tol: "       << object.rk_tol       << "\tdoublePrecThresh: " << object.doublePrecThresh << "\ttimeRes: "   << object.timeRes    << "\n";
