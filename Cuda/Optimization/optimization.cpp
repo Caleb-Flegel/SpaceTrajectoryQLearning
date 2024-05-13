@@ -393,7 +393,19 @@ double optimize(const cudaConstants* cConstants) {
         //Save the previous state and update the child's state with the new state
         std::vector<int> prevState = individual.curState.stateParams;
         individual.curState.stateParams = newState;
-        individual.curParams = individual.curState.getSimVal(cConstants);
+
+        //elements<double> earth = launchCon->getCondition(calcParams.tripTime); //get Earth's position and velocity at launch
+        individual.curParams = individual.curState.getSimVal(cConstants, launchCon);
+
+        elements<double> earth = launchCon->getCondition(individual.curParams.tripTime); //get Earth's position and velocity at launch
+
+        individual.curParams.y0 = elements<double>( // calculate the starting position and velocity of the spacecraft from Earth's position and velocity and spacecraft launch angles
+            earth.r+ESOI*cos(individual.curParams.alpha),
+            earth.theta+asin(sin(M_PI-individual.curParams.alpha)*ESOI/earth.r),
+            earth.z, // The spacecraft Individual is set to always be in-plane (no initial Z offset relative to earth) 
+            earth.vr+cos(individual.curParams.zeta)*sin(individual.curParams.beta)*cConstants->v_escape, 
+            earth.vtheta+cos(individual.curParams.zeta)*cos(individual.curParams.beta)*cConstants->v_escape,
+            earth.vz+sin(individual.curParams.zeta)*cConstants->v_escape);
 
         //TODO: sim here to get progress
         double timeInitial = 0;
@@ -458,3 +470,4 @@ double optimize(const cudaConstants* cConstants) {
 
     return calcPerS;
 }
+

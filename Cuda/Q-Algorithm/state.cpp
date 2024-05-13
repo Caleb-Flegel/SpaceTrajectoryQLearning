@@ -5,7 +5,7 @@
 #include"../Config_Constants/constants.h"
 #include"../Runge_Kutta/rkParameters.h"
 #include"../Motion_Eqns/elements.h"
-#include "../Planet_calculations/planetInfo.h"
+//#include "../Planet_calculations/planetInfo.h"
 
 
 
@@ -349,7 +349,7 @@ std::vector<int> State::getNewState(const std::string& action){
 }
 
 //Calculates simulation params based on the current state increments
-rkParameters<double> State::getSimVal(const cudaConstants * cConstants) const{
+rkParameters<double> State::getSimVal(const cudaConstants * cConstants, const PlanetInfo* earthInfo) const{
     //Create new rkParams var
     //Use cConstants->minSimVals, cConstants->maxSimVals, and cConstants->numIncrements to calculate the value of each increment 
     //Multiply the increment value by the number of increments for the variable to calculate the actual value of the state 
@@ -426,15 +426,15 @@ rkParameters<double> State::getSimVal(const cudaConstants * cConstants) const{
     //Calc gamma 4
     calcParams.coeff.coast[4] = stateParams[COAST4_OFFSET]*incVal;
 
-    elements<double> earth = launchCon->getCondition(calcParams.tripTime); //get Earth's position and velocity at launch
+    // elements<double> earth = earthInfo->getCondition(calcParams.tripTime); //get Earth's position and velocity at launch
 
-    calcParams.y0 = elements<double>( // calculate the starting position and velocity of the spacecraft from Earth's position and velocity and spacecraft launch angles
-        earth.r+ESOI*cos(calcParams.alpha),
-        earth.theta+asin(sin(M_PI-calcParams.alpha)*ESOI/earth.r),
-        earth.z, // The spacecraft Individual is set to always be in-plane (no initial Z offset relative to earth) 
-        earth.vr+cos(calcParams.zeta)*sin(calcParams.beta)*cConstants->v_escape, 
-        earth.vtheta+cos(calcParams.zeta)*cos(calcParams.beta)*cConstants->v_escape,
-        earth.vz+sin(calcParams.zeta)*cConstants->v_escape);
+    // calcParams.y0 = elements<double>( // calculate the starting position and velocity of the spacecraft from Earth's position and velocity and spacecraft launch angles
+    //     earth.r+ESOI*cos(calcParams.alpha),
+    //     earth.theta+asin(sin(M_PI-calcParams.alpha)*ESOI/earth.r),
+    //     earth.z, // The spacecraft Individual is set to always be in-plane (no initial Z offset relative to earth) 
+    //     earth.vr+cos(calcParams.zeta)*sin(calcParams.beta)*cConstants->v_escape, 
+    //     earth.vtheta+cos(calcParams.zeta)*cos(calcParams.beta)*cConstants->v_escape,
+    //     earth.vz+sin(calcParams.zeta)*cConstants->v_escape);
 
     return calcParams;
 }

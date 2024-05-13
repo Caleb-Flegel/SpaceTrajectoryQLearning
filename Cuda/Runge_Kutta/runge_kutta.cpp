@@ -386,7 +386,7 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
         individual.simNum++;
         
         rkParameters<double> rkParams;
-        rkParams = individual.curState.getSimVal(cConstant); // get the parameters for this thread
+        rkParams = individual.curParams; // get the parameters for this thread
 
         // storing copies of the input values
         double stepSize;

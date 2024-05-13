@@ -93,7 +93,7 @@ double Child::getParameters (const cudaConstants* cConstants, const objective & 
         return fuelSpent;
     }
     else if (requestObjective.goal == TRIP_TIME) {
-        return curState.getSimVal(cConstants).tripTime; 
+        return curParams.tripTime; 
     }
     else if (requestObjective.goal == ORBIT_POS_DIFF){
         return orbitPosDiff;

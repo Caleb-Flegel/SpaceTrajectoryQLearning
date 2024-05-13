@@ -1,8 +1,38 @@
 #ifndef planetInfo_h
 #define planetInfo_h
 
+class PlanetInfo;
+
+PlanetInfo *launchCon;
+PlanetInfo *marsLaunchCon;
+
 #include "../Motion_Eqns/elements.h"
 #include "../Config_Constants/config.h"
+
+// Reports size/number of elements in the planetCon array -> passed into Malloc
+// Input: cConstants - to access triptime_max and timeRes
+// Output: 6 times the number of elements in the planetCon array 
+//         This number is multiplied by 6 because that is how many things are in elements<T>
+int getPlanetSize(const cudaConstants * cConstants);
+
+// Determines the next step back from a given element using rk4Reverse, used in the constructor of PlanetInfo
+// Input for planetInitial_incremental:
+//      timeInitial: time (in seconds) of the impact date
+//      tripTime: optimized time period of the overall trip
+//      planet: planet's position and velocity on the arrival date (passed in from planetInfo.cpp)
+elements<double> planetInitial_incremental(double timeInitial, double tripTime,const elements<double> & planet, const cudaConstants * cConstants);
+
+// Interpolates the data to find the position of a planet currentTime seconds BEFORE the spacecraft reaches the target
+// IMPORTANT NOTE: 
+//      currentTime is seconds BEFORE the spacecraft reaches the TARGET
+//      currentTime is NOT the number of seconds that have passed since the spacecraft left Earth
+// Input: currentTime - seconds before the spacecraft reaches the target
+//        cConstants - to access triptime_max and timeRes
+//        planetConditions - the array of elements that holds the position of the planet at timeRes intervals
+// Output: The position of the planet currentTime seconds BEFORE the spacecraft reaches the target
+// NOTE: This is a device version of getCondition -> if changes are made to getCondition, you will likely want to make them here too 
+elements<double> getConditionDev(const double & currentTime, const cudaConstants * cConstants, const elements<double>* planetConditions);
+
 #include "../Runge_Kutta/runge_kutta.h"
 
 class PlanetInfo{
@@ -79,34 +109,9 @@ class PlanetInfo{
 
 };
 
-
-// Reports size/number of elements in the planetCon array -> passed into Malloc
-// Input: cConstants - to access triptime_max and timeRes
-// Output: 6 times the number of elements in the planetCon array 
-//         This number is multiplied by 6 because that is how many things are in elements<T>
-int getPlanetSize(const cudaConstants * cConstants);
-
-// Determines the next step back from a given element using rk4Reverse, used in the constructor of PlanetInfo
-// Input for planetInitial_incremental:
-//      timeInitial: time (in seconds) of the impact date
-//      tripTime: optimized time period of the overall trip
-//      planet: planet's position and velocity on the arrival date (passed in from planetInfo.cpp)
-elements<double> planetInitial_incremental(double timeInitial, double tripTime,const elements<double> & planet, const cudaConstants * cConstants);
-
-// Interpolates the data to find the position of a planet currentTime seconds BEFORE the spacecraft reaches the target
-// IMPORTANT NOTE: 
-//      currentTime is seconds BEFORE the spacecraft reaches the TARGET
-//      currentTime is NOT the number of seconds that have passed since the spacecraft left Earth
-// Input: currentTime - seconds before the spacecraft reaches the target
-//        cConstants - to access triptime_max and timeRes
-//        planetConditions - the array of elements that holds the position of the planet at timeRes intervals
-// Output: The position of the planet currentTime seconds BEFORE the spacecraft reaches the target
-// NOTE: This is a device version of getCondition -> if changes are made to getCondition, you will likely want to make them here too 
- elements<double> getConditionDev(const double & currentTime, const cudaConstants * cConstants, const elements<double>* planetConditions);
-
 // Global variable for launchCon (assigned content in optimization.cu)
-PlanetInfo *launchCon;
-PlanetInfo *marsLaunchCon;
+// PlanetInfo *launchCon;
+// PlanetInfo *marsLaunchCon;
 
 #include "planetInfo.cpp"
 
