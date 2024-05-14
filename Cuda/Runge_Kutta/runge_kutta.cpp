@@ -301,7 +301,7 @@ void callRK(Child individual, double absTolInput, const cudaConstants* cConstant
 
 // Called by optimize() in optimization.cu
 //void callRK(const int numThreads, const int blockThreads, Child *generation, double timeInitial, double stepSize, double absTol, double & calcPerS, const cudaConstants* cConstant, PlanetInfo *marsLaunchCon) {
-void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double>* marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps, double timeInitial) {
+void callRK(Child & individual, double absTolInput, const cudaConstants* cConstant, elements<double>* marsLaunchCon, double* time_steps, elements<double>* y_steps, double* gamma_steps, double* tau_steps, double* accel_steps, double* fuel_steps, double timeInitial) {
 
     //which (if any) of these do we need to reset here?
     individual.simStatus = INITIAL_SIM;
@@ -310,6 +310,8 @@ void callRK(Child & individual, double absTolInput, const cudaConstants* cConsta
     individual.stepCount = 0;
     
     double stepSize = (cConstant->minSimVals[TRIPTIME_OFFSET] - timeInitial)/cConstant->max_numsteps;
+
+    //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE RUN-_-_-_-_-_-_-_-_-_\n\n";
     
     //Do while loop will keep simulating while there are still children to simulate
     do {
@@ -318,6 +320,8 @@ void callRK(Child & individual, double absTolInput, const cudaConstants* cConsta
 
         std::cout << "_";
     } while (individual.simStatus != COMPLETED_SIM);
+
+    //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE NAN-_-_-_-_-_-_-_-_-_\n\n";
 
     //Check to see if nans are generated in the finalPos elements
     if (isnan(individual.finalPos.r) ||
@@ -329,6 +333,8 @@ void callRK(Child & individual, double absTolInput, const cudaConstants* cConsta
         //Mark the child with the nan variables with the nan_error flag
         individual.errorStatus = NAN_ERROR;
     }//if it is not a nan, the status has already been made valid or sun_error in rk4CUDASim
+
+    //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE GETS-_-_-_-_-_-_-_-_-_\n\n";
 
     //Now that the status has been determined, there is enough information to set pos and speed diffs
     //The two functions will look at the child's errorStatus and set the diffs based on that
@@ -351,18 +357,28 @@ void callRK(Child & individual, double absTolInput, const cudaConstants* cConsta
 // Called by optimize() in optimization.cu
 // This should be used when we don't need a MATLAB output
 void callRKBasic(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double timeInitial) {
-    std::vector<double> time_steps(0,0);
-    std::vector<elements<double>> y_steps;
-    std::vector<double> gamma_steps(0,0); 
-    std::vector<double> tau_steps(0,0); 
-    std::vector<double> accel_steps(0,0);
-    std::vector<double> fuel_steps(0,0);
+    //Calculate the maximum possible number of steps taken to make enough memory is allocated
+    int numSteps = (cConstant->maxSimNum * (cConstant->max_numsteps + 1))+1;
+    
+    double* time_steps = new double[numSteps];
+    elements<double>* y_steps= new elements<double>[numSteps];
+    double* gamma_steps = new double[numSteps]; 
+    double* tau_steps = new double[numSteps]; 
+    double* accel_steps = new double[numSteps];
+    double* fuel_steps = new double[numSteps];
+    
     callRK(individual, absTolInput, cConstant, marsLaunchCon, time_steps, y_steps, gamma_steps, tau_steps, accel_steps, fuel_steps, timeInitial); //this doesn't work? what should i be doing
         
+    delete [] time_steps;
+    delete [] y_steps;
+    delete [] gamma_steps;
+    delete [] tau_steps;
+    delete [] accel_steps;
+    delete [] fuel_steps;
 }
 
 // seperate conditions are passed for each thread, but timeInitial, stepSize, and absTol are the same for every thread
-void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, std::vector<double>& time_steps, std::vector<elements<double>>& y_steps, std::vector<double>& gamma_steps, std::vector<double>& tau_steps, std::vector<double>& accel_steps, std::vector<double>& fuel_steps) {
+void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cConstant, elements<double> *marsLaunchCon, double* time_steps, elements<double>* y_steps, double* gamma_steps, double* tau_steps, double* accel_steps, double* fuel_steps) {
    
     // individual.simNum++;
     //Check if this child has been simulated already
@@ -404,6 +420,8 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
         //Stores the angular momentum if the individual is entering an SOI
         //  Used to check if the assist was bad
         double soiEntryh;
+
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE INITIAL SIM-_-_-_-_-_-_-_-_-_\n\n";
 
         //Set the initial curTime and curPos depending on if the child has been ran
         if (individual.simStatus == INITIAL_SIM) {
@@ -450,37 +468,50 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
             endTime = rkParams.tripTime;
         }
 
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE get thrust-_-_-_-_-_-_-_-_-_\n\n";
+
         thruster<double> thrust(cConstant);
 
         bool coast; //=1 means thrusting, from calc_coast()
 
         elements<double> error; // holds output of previous value from rkCalc
 
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE calc STEP SIZE-_-_-_-_-_-_-_-_-_\n\n";
+
         //Calculation of the simulation's step size
         //  Setting the value to be as small as possible
         stepSize = (endTime - startTime) / cConstant->max_numsteps;
 
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE SIM START-_-_-_-_-_-_-_-_-_\n\n";
+
+        //std::cout << curTime << ",\t" << endTime << ",\t" << individual.stepCount;
+
         while (curTime < endTime) {
+            //std::cout<< "\n\n_-_-_-_-_-_-_-_-_-TEST: ENTERED WHILE LOOP-_-_-_-_-_-_-_-_-_\n\n";
+            //std::cout << time_steps << ",\t" << *time_steps;
             //Save the time of the current step
             time_steps[individual.stepCount] = curTime;
+
+            //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE Choose Thruster-_-_-_-_-_-_-_-_-_\n\n";
 
             // Check the thruster type before performing calculations
             if (cConstant->thruster_type == thruster<double>::NO_THRUST) {
                 coast = curAccel = 0;
             }
             else {
+                //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE calc_coast-_-_-_-_-_-_-_-_-_\n\n";
                 //Calc if the thruster is activated
                 coast = calc_coast(rkParams.coeff, curTime, rkParams.tripTime, thrust);
-                
+                //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE calc_accel-_-_-_-_-_-_-_-_-_\n\n";
                 //Calc current step's acceleration
                 curAccel = calc_accel(curPos.r, curPos.z, thrust, massFuelSpent, stepSize, coast, static_cast<double>(cConstant->wet_mass), cConstant);
-                
+                //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE calc_gamma-_-_-_-_-_-_-_-_-_\n\n";
                 //Record the gamma value of the current step
-                gamma_steps.push_back(calc_gamma(individual.curParams.coeff, curTime, rkParams.tripTime));
-
+                gamma_steps[individual.stepCount] = (calc_gamma(individual.curParams.coeff, curTime, rkParams.tripTime));
+                //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE calc_tau-_-_-_-_-_-_-_-_-_\n\n";
                 //Record the tau value of the current step
-                tau_steps.push_back(calc_tau(individual.curParams.coeff, curTime, rkParams.tripTime));
-
+                tau_steps[individual.stepCount] = (calc_tau(individual.curParams.coeff, curTime, rkParams.tripTime));
+                
                 //Update the child with how much fuel it has used 
                 individual.fuelSpent = massFuelSpent;
             }
@@ -491,8 +522,10 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
             //Needs to be triptime - curtime to get the correct index for mars
             //when curtime = triptime, this will give us the final position of mars at impact
             //this is because getConditionDev takes in seconds before the spacecraft reaches the target
+            //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE getConditionDev Mars-_-_-_-_-_-_-_-_-_\n\n";
             elements<double> mars = getConditionDev(rkParams.tripTime - curTime, cConstant, marsLaunchCon);
 
+            //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE calc mars dist-_-_-_-_-_-_-_-_-_\n\n";
             //calculate the distance between mars and the spacecraft (|R|^2)
             double marsCraftDist = sqrt(pow(mars.r, 2) + pow(curPos.r, 2) + pow(curPos.z - mars.z, 2) - (2*curPos.r*mars.r*cos(mars.theta-curPos.theta)));
 
@@ -501,6 +534,8 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
             if (marsCraftDist < individual.minMarsDist) {
                 individual.minMarsDist = marsCraftDist;
             }
+
+            //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE RL CALC-_-_-_-_-_-_-_-_-_\n\n";
             
             // calculate k values and get new value of y
             rkCalc(curTime, rkParams.tripTime, stepSize, curPos, rkParams.coeff, curAccel, error, mars, marsCraftDist); 
@@ -545,6 +580,8 @@ void rk4CPUSim(Child& individual, double absTolInput, const cudaConstants* cCons
 
                 return;
             }
+
+            //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE END CHECK-_-_-_-_-_-_-_-_-_\n\n";
 
             //Check to see if the curTime is less than triptime
             if (curTime < endTime) {

@@ -383,6 +383,12 @@ double optimize(const cudaConstants* cConstants) {
     // main gentic algorithm loop
     // - continues until checkTolerance returns true (specific number of individuals are within threshold)
     do {
+
+        // std::cout << "\nINCOMING STATE:\n";
+        // for (int i = 0; i < individual.curState.stateParams.size(); i++){
+        //     std::cout << individual.curState.stateParams[i] << "\t";
+        // }
+
         // Genetic Crossover and mutation occur here
         //takes in oldAdults (the potential parents) and fills newAdults with descendants of the old adults
         //oldAdults is filled with the potential parents for a generation (num_individuals size) 
@@ -400,7 +406,12 @@ double optimize(const cudaConstants* cConstants) {
         std::vector<int> prevState = individual.curState.stateParams;
         individual.curState.stateParams = newState;
 
-        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE G-_-_-_-_-_-_-_-_-_\n\n";
+        // std::cout << "\nNEW STATE:\n";
+        // for (int i = 0; i < individual.curState.stateParams.size(); i++){
+        //     std::cout << individual.curState.stateParams[i] << "\t";
+        // }
+
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE Get Sim VAL-_-_-_-_-_-_-_-_-_\n\n";
         //elements<double> earth = launchCon->getCondition(calcParams.tripTime); //get Earth's position and velocity at launch
         individual.curParams = individual.curState.getSimVal(cConstants, launchCon);
 
@@ -414,13 +425,15 @@ double optimize(const cudaConstants* cConstants) {
             earth.vtheta+cos(individual.curParams.zeta)*cos(individual.curParams.beta)*cConstants->v_escape,
             earth.vz+sin(individual.curParams.zeta)*cConstants->v_escape);
 
+        //std::cout<< "\n" << individual.curParams << "\n";
+
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE callRK-_-_-_-_-_-_-_-_-_\n\n";
         //TODO: sim here to get progress
         double timeInitial = 0;
         callRKBasic(individual, cConstants->rk_tol, cConstants, marsLaunchCon->getAllPositions(), timeInitial);
         
         
-        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE update_q_values-_-_-_-_-_-_-_-_-_\n\n";
+        // td::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE update_q_values-_-_-_-_-_-_-_-_-_\n\n";
 
         //TODO: (possibly in the last func) choose either the best or a random next state
         update_q_values(cConstants, individual, prevState);
@@ -473,6 +486,9 @@ double optimize(const cudaConstants* cConstants) {
         
         //Increment the generation counter
         ++generation;
+
+        //Reset child
+        individual= Child(individual.curState, cConstants);
     
         //Loop exits based on result of checkTolerance and if max_generations has been hit
     } while ( !convergence && generation < cConstants->max_generations);

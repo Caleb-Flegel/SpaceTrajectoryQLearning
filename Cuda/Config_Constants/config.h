@@ -43,8 +43,8 @@ struct cudaConstants {
     int num_increments; 
 
     // Store the min and max sim values in arrays
-    std::vector<int> minSimVals;
-    std::vector<int> maxSimVals;
+    std::vector<double> minSimVals;
+    std::vector<double> maxSimVals;
 
     // Start ranges for each value
     // double gamma_min; // Sets all coefficients within the range

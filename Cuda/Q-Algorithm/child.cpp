@@ -45,7 +45,7 @@ Child::Child(State initState, const cudaConstants* cConstants) {
     simStartTime = 0; //Inititially start the simulation at the start of the trip time
     simNum = 0; //Has not been simulated yet
 
-    //progress = 0;
+    progress = 0;
 
     minMarsDist = 100; //Arbitrarily high initial min mars distance
     orbithChange = 1e-14; //No assist initially, so no angular momentum change initally

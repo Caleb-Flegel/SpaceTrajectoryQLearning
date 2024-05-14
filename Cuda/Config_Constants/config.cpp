@@ -259,23 +259,92 @@ void cudaConstants::FileRead(std::string fileName) {
                     else if (variableName == "triptime_max") {
                         this->maxSimVals[TRIPTIME_OFFSET] = std::stod(variableValue) * SECONDS_IN_YEAR;
                     }
-                    else if (variableName == "gamma_min") {
-                        this->minSimVals[GAMMA_OFFSET] = std::stod(variableValue);
+                    else if (variableName == "gamma0_min") {
+                        this->minSimVals[GAMMA0_OFFSET] = std::stod(variableValue);
                     }
-                    else if (variableName == "gamma_max") {
-                        this->maxSimVals[GAMMA_OFFSET] = std::stod(variableValue);
+                    else if (variableName == "gamma0_max") {
+                        this->maxSimVals[GAMMA0_OFFSET] = std::stod(variableValue);
                     }
-                    else if (variableName == "tau_min") {
-                        this->minSimVals[TAU_OFFSET] = std::stod(variableValue);
+                    else if (variableName == "gamma1_min") {
+                        this->minSimVals[GAMMA1_OFFSET] = std::stod(variableValue);
                     }
-                    else if (variableName == "tau_max") {
-                        this->maxSimVals[TAU_OFFSET] = std::stod(variableValue);
+                    else if (variableName == "gamma1_max") {
+                        this->maxSimVals[GAMMA1_OFFSET] = std::stod(variableValue);
                     }
-                    else if (variableName == "coast_min") {
-                        this->minSimVals[COAST_OFFSET] = std::stod(variableValue);
+                    else if (variableName == "gamma2_min") {
+                        this->minSimVals[GAMMA2_OFFSET] = std::stod(variableValue);
                     }
-                    else if (variableName == "coast_max") {
-                        this->maxSimVals[COAST_OFFSET] = std::stod(variableValue);
+                    else if (variableName == "gamma2_max") {
+                        this->maxSimVals[GAMMA2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma3_min") {
+                        this->minSimVals[GAMMA3_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma3_max") {
+                        this->maxSimVals[GAMMA3_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma4_min") {
+                        this->minSimVals[GAMMA4_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma4_max") {
+                        this->maxSimVals[GAMMA4_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma5_min") {
+                        this->minSimVals[GAMMA5_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma5_max") {
+                        this->maxSimVals[GAMMA5_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma6_min") {
+                        this->minSimVals[GAMMA6_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "gamma6_max") {
+                        this->maxSimVals[GAMMA6_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau0_min") {
+                        this->minSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau0_max") {
+                        this->maxSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau1_min") {
+                        this->minSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau1_max") {
+                        this->maxSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau2_min") {
+                        this->minSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "tau2_max") {
+                        this->maxSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast0_min") {
+                        this->minSimVals[COAST0_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast0_max") {
+                        this->maxSimVals[COAST0_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast1_min") {
+                        this->minSimVals[COAST1_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast1_max") {
+                        this->maxSimVals[COAST1_OFFSET] = std::stod(variableValue);
+                    }else if (variableName == "coast2_min") {
+                        this->minSimVals[COAST2_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast2_max") {
+                        this->maxSimVals[COAST2_OFFSET] = std::stod(variableValue);
+                    }else if (variableName == "coast3_min") {
+                        this->minSimVals[COAST3_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast3_max") {
+                        this->maxSimVals[COAST3_OFFSET] = std::stod(variableValue);
+                    }else if (variableName == "coast4_min") {
+                        this->minSimVals[COAST4_OFFSET] = std::stod(variableValue);
+                    }
+                    else if (variableName == "coast4_max") {
+                        this->maxSimVals[COAST4_OFFSET] = std::stod(variableValue);
                     }
 
                     // else if (variableName == "mutation_amplitude") {
