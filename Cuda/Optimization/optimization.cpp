@@ -371,11 +371,13 @@ double optimize(const cudaConstants* cConstants) {
 
     //TODO (DONE): Generate initial state here
     //Generate initial state
-    std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE INIT State-_-_-_-_-_-_-_-_-_\n\n";
+    //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE INIT State-_-_-_-_-_-_-_-_-_\n\n";
     State initState(cConstants, rng);
     //Generate individual
-    std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE INIT CHILD-_-_-_-_-_-_-_-_-_\n\n";
+    //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE INIT CHILD-_-_-_-_-_-_-_-_-_\n\n";
     Child individual(initState, cConstants);
+    Child bestIndividual(initState, cConstants);
+
 
 
     // main gentic algorithm loop
@@ -389,16 +391,16 @@ double optimize(const cudaConstants* cConstants) {
         // std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE NEW GEN-_-_-_-_-_-_-_-_-_\n\n";
         // newGeneration(oldAdults, newAdults, currentAnneal, generation, rng, cConstants, gpuValues);
 
-        std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE New State-_-_-_-_-_-_-_-_-_\n\n";
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE New State-_-_-_-_-_-_-_-_-_\n\n";
         //TODO: use function to get possible actions then get the value of the adjacent actions
         std::vector<int> newState = getNextState(cConstants, individual, rng);
 
-        std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE Assign New State-_-_-_-_-_-_-_-_-_\n\n";
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE Assign New State-_-_-_-_-_-_-_-_-_\n\n";
         //Save the previous state and update the child's state with the new state
         std::vector<int> prevState = individual.curState.stateParams;
         individual.curState.stateParams = newState;
 
-        std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE G-_-_-_-_-_-_-_-_-_\n\n";
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE G-_-_-_-_-_-_-_-_-_\n\n";
         //elements<double> earth = launchCon->getCondition(calcParams.tripTime); //get Earth's position and velocity at launch
         individual.curParams = individual.curState.getSimVal(cConstants, launchCon);
 
@@ -412,13 +414,13 @@ double optimize(const cudaConstants* cConstants) {
             earth.vtheta+cos(individual.curParams.zeta)*cos(individual.curParams.beta)*cConstants->v_escape,
             earth.vz+sin(individual.curParams.zeta)*cConstants->v_escape);
 
-        std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE callRK-_-_-_-_-_-_-_-_-_\n\n";
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE callRK-_-_-_-_-_-_-_-_-_\n\n";
         //TODO: sim here to get progress
         double timeInitial = 0;
         callRKBasic(individual, cConstants->rk_tol, cConstants, marsLaunchCon->getAllPositions(), timeInitial);
         
         
-        std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE update_q_values-_-_-_-_-_-_-_-_-_\n\n";
+        //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE update_q_values-_-_-_-_-_-_-_-_-_\n\n";
 
         //TODO: (possibly in the last func) choose either the best or a random next state
         update_q_values(cConstants, individual, prevState);
@@ -453,11 +455,13 @@ double optimize(const cudaConstants* cConstants) {
         //Get the run's total time
         totRunTime = (std::chrono::system_clock::now() - runStartTime);
 
-        //TODO: fix reporting
+        if (individual.progress >= bestIndividual.progress){
+            bestIndividual = individual;
+        }
 
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE RECORD-_-_-_-_-_-_-_-_-_\n\n";
         //Print out necessary info for this generation
-        genOutputs.printGeneration(cConstants, allAdults, objectiveAvgValues, generation, currentAnneal, numErrors, duplicateNum, totAssoc, minSteps, avgSteps, maxSteps, minDistance, avgDistance, maxDistance, avgAge, generation-oldestBirthday, avgBirthday, oldestBirthday, (totRunTime.count()/(generation+1)));
+        genOutputs.printGeneration(cConstants, individual, bestIndividual, generation, (totRunTime.count()/(generation+1)));
 
         // Before replacing new adults, determine whether all are within tolerance
         // Determines when loop is finished
@@ -473,9 +477,8 @@ double optimize(const cudaConstants* cConstants) {
         //Loop exits based on result of checkTolerance and if max_generations has been hit
     } while ( !convergence && generation < cConstants->max_generations);
 
-    //TODO: fix
     //Handle the final printing
-    genOutputs.printFinalGen(cConstants, allAdults, gpuValues, convergence, generation, numErrors, duplicateNum, oldestBirthday, (totRunTime.count()/(generation+1))); 
+    genOutputs.printFinalGen(cConstants, individual, bestIndividual, convergence, generation, (totRunTime.count()/(generation+1))); 
 
     return calcPerS;
 }

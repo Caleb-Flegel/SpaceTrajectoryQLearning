@@ -54,7 +54,7 @@ void output::printGeneration(const cudaConstants * cConstants, const Child& curI
 }
 
 //Function will handle printing at the end of a run
-void output::printFinalGen(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, GPUMem & gpuValues, const bool& converged, const int& generation, const float& avgGenTime) {
+void output::printFinalGen(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, const bool& converged, const int& generation, const float& avgGenTime) {
   //Call for a print of allIndividuals if in record mode and if it is not a report generation already
   //  Note: second check is simply so redundant files aren't created
   // if ((cConstants->record_mode == true) && (generation % cConstants->all_write_freq != 0)) {
@@ -78,7 +78,7 @@ void output::printFinalGen(const cudaConstants * cConstants, const Child& curInd
 
       //TODO: Fix this here and in setting it up
       // Evaluate and print this solution's information to binary files
-      trajectoryPrint(generation, cConstants, allAdults[0], gpuValues);
+//      trajectoryPrint(generation, cConstants, allAdults[0], gpuValues);
   //}
 }
 
@@ -309,14 +309,14 @@ void output::recordGenerationPerformance(const cudaConstants * cConstants, const
 
   //Output the best rank distance adult's parameters
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << best.getParameters(cConstants->missionObjectives[i]) << ",";
+    excelFile << best.getParameters(cConstants, cConstants->missionObjectives[i]) << ",";
   }
   //Output the best rank distance adult's differences
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
     excelFile << best.objTargetDiffs[i] << ",";
   }
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << cur.getParameters(cConstants->missionObjectives[i]) << ",";
+    excelFile << cur.getParameters(cConstants, cConstants->missionObjectives[i]) << ",";
   }
   //Output the best rank distance adult's differences
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
@@ -335,7 +335,7 @@ void output::recordGenerationPerformance(const cudaConstants * cConstants, const
     excelFile << best.curParams.coeff.tau[i-TAU_OFFSET] << ","; 
   }
   for (int i = COAST_OFFSET; i < COAST_ARRAY_SIZE + COAST_OFFSET; i++) {
-    excelFile << bets.curParams.coeff.coast[i-COAST_OFFSET] << ","; 
+    excelFile << best.curParams.coeff.coast[i-COAST_OFFSET] << ","; 
   } 
 
   excelFile << cur.progress << ",";
@@ -509,7 +509,7 @@ void output::reportRun(const cudaConstants* cConstants, const Child& best, const
 
   //For each objective, print the adult's parameter
   for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-    output << "," << best.getParameters(cConstants->missionObjectives[j]);
+    output << "," << best.getParameters(cConstants, cConstants->missionObjectives[j]);
   }
 
   //End line to move on to the next adult
@@ -520,7 +520,7 @@ void output::reportRun(const cudaConstants* cConstants, const Child& best, const
 
   //For each objective, print the adult's parameter
   for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-    output << "," << cur.getParameters(cConstants->missionObjectives[j]);
+    output << "," << cur.getParameters(cConstants, cConstants->missionObjectives[j]);
   }
 
   //End line to move on to the next adult
@@ -835,36 +835,36 @@ void output::recordMarsData(const cudaConstants * cConstants, const int & genera
   planetValues.close();
 }
 
-//Method used to print a run's used reference points
-void output::recordReferencePoints(const cudaConstants * cConstants, const ReferencePoints & refPoints) {
+// //Method used to print a run's used reference points
+// void output::recordReferencePoints(const cudaConstants * cConstants, const ReferencePoints & refPoints) {
 
-  // seed to hold time_seed value to identify the file
-  int seed = cConstants->time_seed;
+//   // seed to hold time_seed value to identify the file
+//   int seed = cConstants->time_seed;
 
-  // Open file
-  std::ofstream output;
-  output.open(outputPath + "referencePoints-"+ std::to_string(seed) + ".csv");
+//   // Open file
+//   std::ofstream output;
+//   output.open(outputPath + "referencePoints-"+ std::to_string(seed) + ".csv");
 
-  //Print the number of objectives as a header
-  for (int i = 0; i < refPoints.points[0].size(); i++) {
-    output << "Objective" << i << ",";  
-  }
+//   //Print the number of objectives as a header
+//   for (int i = 0; i < refPoints.points[0].size(); i++) {
+//     output << "Objective" << i << ",";  
+//   }
 
-  //Print all of the points
-  for (int i = 0; i < refPoints.points.size(); i++) {
-    //New line for new point
-    output << "\n";
+//   //Print all of the points
+//   for (int i = 0; i < refPoints.points.size(); i++) {
+//     //New line for new point
+//     output << "\n";
 
-    for (int j = 0; j < refPoints.points[i].size(); j++) {
+//     for (int j = 0; j < refPoints.points[i].size(); j++) {
 
-      //Print one part of the point
-      output << refPoints.points[i][j] << ",";
-    }
-  }
+//       //Print one part of the point
+//       output << refPoints.points[i][j] << ",";
+//     }
+//   }
   
   //Close the file
-  output.close();
-}
+//  output.close();
+//}
 
 //!--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //General Functions
@@ -920,7 +920,7 @@ void terminalDisplay(const Child& individual, const std::vector<objective> objec
   //Print the parameters for each of the objectives for the passed in individual
   for (int i = 0; i < objectives.size(); i++) {
     //Print the name and value of the data of the objective
-    std::cout << "\n\t" << objectives[i].name << ": " << individual.getParameters(objectives[i]);
+    std::cout << "\n\t" << objectives[i].name << ": " << individual.getParameters(cConstants, objectives[i]);
 
     //Print the difference
     std::cout << "\n\t\t" << "Diff. from target: " << individual.objTargetDiffs[i];

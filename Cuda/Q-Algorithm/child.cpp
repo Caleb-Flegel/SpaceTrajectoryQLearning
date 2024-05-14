@@ -9,6 +9,8 @@ Child::Child() {
     errorStatus = NOT_RUN; //not run through callRk
 
     simStatus = INITIAL_SIM; //has not been simulated
+
+    //progress = 0;
 }
 
 // Set the initial position of the spacecraft according to the newly generated parameters
@@ -42,6 +44,8 @@ Child::Child(State initState, const cudaConstants* cConstants) {
     stepCount = 0; //no calculations done yet, default is zero
     simStartTime = 0; //Inititially start the simulation at the start of the trip time
     simNum = 0; //Has not been simulated yet
+
+    //progress = 0;
 
     minMarsDist = 100; //Arbitrarily high initial min mars distance
     orbithChange = 1e-14; //No assist initially, so no angular momentum change initally

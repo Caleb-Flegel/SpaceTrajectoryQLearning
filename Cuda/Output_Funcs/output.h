@@ -36,13 +36,14 @@ struct output
     // Inputs: Passed to printBestAdults(), recordGenerationPerformance(), recordGenSimple(), and recordAllIndividuals()
     //              See those functions' header files for detail on how the inputs are used
     // Outputs: The functions lised above will be called depending on the current generation and cConstants's write frequency variables
-    void printGeneration(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, const int& generation); 
+    void printGeneration(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, const int& generation, const float& avgGenTime); 
 
     // Function will handle printing at the end of a run
     // Inputs: Passed to recordAllIndividuals(), printBestAdults(), reportRun(), & finalRecord()
     //              See those functions' header files for detail on how the inputs are used
     // Outputs: printBestAdults() and reportRun() will be called regardless, with recordAllIndividuals() and finalRecord() being called conditionally
-    void printFinalGen(const cudaConstants * cConstants, std::vector<Adult>& allAdults, GPUMem & gpuValues, const bool& converged, const int& generation, int& errorNum, const int& duplicateNum, const int& oldestBirthday, const float& avgGenTime); 
+    //void printFinalGen(const cudaConstants * cConstants, std::vector<Adult>& allAdults, GPUMem & gpuValues, const bool& converged, const int& generation, int& errorNum, const int& duplicateNum, const int& oldestBirthday, const float& avgGenTime); 
+    void printFinalGen(const cudaConstants * cConstants, const Child& curInd, const Child& bestInd, const bool& converged, const int& generation, const float& avgGenTime);
     
     // Initialize genPerformance with header rows
     // input: cConstants - to access time_seed for deriving file name conventions
@@ -154,7 +155,7 @@ struct output
     void recordEarthData(const cudaConstants * cConstants, const int & generation);
 
     //Method used to print a run's used reference points
-    void recordReferencePoints(const cudaConstants * cConstants, const ReferencePoints & refPoints);
+    //void recordReferencePoints(const cudaConstants * cConstants, const ReferencePoints & refPoints);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
