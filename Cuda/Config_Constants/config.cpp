@@ -302,16 +302,16 @@ void cudaConstants::FileRead(std::string fileName) {
                         this->maxSimVals[GAMMA6_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "tau0_min") {
-                        this->minSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                        this->minSimVals[TAU0_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "tau0_max") {
-                        this->maxSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                        this->maxSimVals[TAU0_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "tau1_min") {
-                        this->minSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                        this->minSimVals[TAU1_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "tau1_max") {
-                        this->maxSimVals[TAU2_OFFSET] = std::stod(variableValue);
+                        this->maxSimVals[TAU1_OFFSET] = std::stod(variableValue);
                     }
                     else if (variableName == "tau2_min") {
                         this->minSimVals[TAU2_OFFSET] = std::stod(variableValue);

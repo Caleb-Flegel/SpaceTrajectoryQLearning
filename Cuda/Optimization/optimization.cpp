@@ -243,6 +243,8 @@ std::vector<int> getNextState(const cudaConstants* cConstants, Child & ind, std:
     //Get possible actions
     std::vector<std::string> possActions = ind.curState.getPossibleActions(cConstants);
 
+    // std::cout << "\n" << possActions.size() << "\n";
+
     //Vector that will store the next states based on the actions
     std::vector<std::vector<int>> nextStates;
 
@@ -413,7 +415,7 @@ double optimize(const cudaConstants* cConstants) {
 
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE Get Sim VAL-_-_-_-_-_-_-_-_-_\n\n";
         //elements<double> earth = launchCon->getCondition(calcParams.tripTime); //get Earth's position and velocity at launch
-        individual.curParams = individual.curState.getSimVal(cConstants, launchCon);
+        individual.curParams = individual.curState.getSimVal(cConstants);
 
         elements<double> earth = launchCon->getCondition(individual.curParams.tripTime); //get Earth's position and velocity at launch
 
@@ -425,7 +427,7 @@ double optimize(const cudaConstants* cConstants) {
             earth.vtheta+cos(individual.curParams.zeta)*cos(individual.curParams.beta)*cConstants->v_escape,
             earth.vz+sin(individual.curParams.zeta)*cConstants->v_escape);
 
-        //std::cout<< "\n" << individual.curParams << "\n";
+        // std::cout<< "\n" << individual.curParams << "\n";
 
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE callRK-_-_-_-_-_-_-_-_-_\n\n";
         //TODO: sim here to get progress

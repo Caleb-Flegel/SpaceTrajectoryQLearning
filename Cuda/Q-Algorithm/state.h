@@ -35,7 +35,7 @@ struct State {
     std::vector<int> getNewState(const std::string& action);
 
     //Calculates simulation params based on the current state increments
-    rkParameters<double> getSimVal(const cudaConstants * cConstants, const PlanetInfo* earthInfo) const;
+    rkParameters<double> getSimVal(const cudaConstants * cConstants) const;
 };
 
 #include "state.cpp"

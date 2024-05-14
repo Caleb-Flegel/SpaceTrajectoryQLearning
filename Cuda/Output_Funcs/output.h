@@ -115,7 +115,6 @@ struct output
     //void reportRun(const cudaConstants* cConstants, const std::vector<Adult>& oldAdults, const bool& converged, const int& generation, const float& avgGenTime); 
     void reportRun(const cudaConstants* cConstants, const Child& best, const Child& cur, const bool& converged, const int& generation, const float& avgGenTime);
 
-/*
     // Main Output, final results of genetic algorithm
     // input: x[] - array of OPTIM_VARS for a single individual
     //        generation - generation num of individual        
@@ -123,7 +122,7 @@ struct output
     //        best - To access the best individual (pool[0])
     // output: file orbitalMotion-[time_seed].bin is created that holds spacecraft RK steps and error
     //         file finalOptimization-[time_seed].bin is created that holds earth/ast/ and trajectory parameter values
-    void output::trajectoryPrint(int generation, const cudaConstants* cConstants, const Adult& best, GPUMem & gpuValues);
+    void trajectoryPrint(int generation, const cudaConstants* cConstants, const Child& cur);
 
     // Records error in energy conservation due to thrust calculations
     // For a single set of rkParameters
@@ -141,7 +140,7 @@ struct output
     //         Etot_avg - array of average mechanical energy between time steps (J)
     // Used to fill orbitalMotion{}.bin
     void errorCheck(double *time, elements<double> *yp,  double *gamma,  double *tau, int & lastStep, double *accel, double *fuelSpent, const double & wetMass, double *work, double *dE, double *Etot_avg, const cudaConstants* config, elements<double> *mars);
-*/
+
     // method that stores information of launchCon of timeRes*24 resolution
     // input: cConstants - access time range and resolution info
     //        launchCon (global variable) - access elements of planet 

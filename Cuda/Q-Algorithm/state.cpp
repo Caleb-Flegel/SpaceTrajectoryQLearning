@@ -130,7 +130,7 @@ std::vector<std::string> State::getPossibleActions(const cudaConstants * cConsta
             }
         }
         //Checks if alpha can be decremented or incremented
-        else if (i == ALPHA_OFFSET){
+        else if (i == ALPHA_OFFSET && (cConstants->minSimVals[ALPHA_OFFSET] != cConstants->maxSimVals[ALPHA_OFFSET])){
             if (stateParams[i] >= 1){
                 legalActions.push_back("decrement_ALPHA");
             }
@@ -139,7 +139,7 @@ std::vector<std::string> State::getPossibleActions(const cudaConstants * cConsta
             }
         }
         //Checks if beta can be decremented or incremented
-        else if (i == BETA_OFFSET){
+        else if (i == BETA_OFFSET && (cConstants->minSimVals[BETA_OFFSET] != cConstants->maxSimVals[BETA_OFFSET])){
             if (stateParams[i] >= 1){
                 legalActions.push_back("decrement_BETA");
             }
@@ -148,7 +148,7 @@ std::vector<std::string> State::getPossibleActions(const cudaConstants * cConsta
             }
         }
         //Checks if zeta can be decremented or incremented
-        else if (i == ZETA_OFFSET){
+        else if (i == ZETA_OFFSET && (cConstants->minSimVals[ZETA_OFFSET] != cConstants->maxSimVals[ZETA_OFFSET])){
             if (stateParams[i] >= 1){
                 legalActions.push_back("decrement_ZETA");
             }
@@ -157,7 +157,7 @@ std::vector<std::string> State::getPossibleActions(const cudaConstants * cConsta
             }
         }  
         //Checks if trip time can be decremented or incremented 
-        else if (i == TRIPTIME_OFFSET){
+        else if (i == TRIPTIME_OFFSET && (cConstants->minSimVals[TRIPTIME_OFFSET] != cConstants->maxSimVals[TRIPTIME_OFFSET])){
             if (stateParams[i] >= 1){
                 legalActions.push_back("decrement_TRIPTIME");
             }
@@ -357,7 +357,7 @@ std::vector<int> State::getNewState(const std::string& action){
 }
 
 //Calculates simulation params based on the current state increments
-rkParameters<double> State::getSimVal(const cudaConstants * cConstants, const PlanetInfo* earthInfo) const{
+rkParameters<double> State::getSimVal(const cudaConstants * cConstants) const{
     //Create new rkParams var
     //Use cConstants->minSimVals, cConstants->maxSimVals, and cConstants->numIncrements to calculate the value of each increment 
     //Multiply the increment value by the number of increments for the variable to calculate the actual value of the state 

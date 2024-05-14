@@ -346,7 +346,7 @@ void callRK(Child & individual, double absTolInput, const cudaConstants* cConsta
     individual.getOrbitSpeedDiff(cConstant);
 
     for (int j = 0; j < cConstant->missionObjectives.size(); j++) {
-        individual.objTargetDiffs[j] = abs(individual.getParameters(cConstant, cConstant->missionObjectives[j]) - cConstant->missionObjectives[j].target);
+        individual.objTargetDiffs[j] = abs(individual.getParameters(cConstant->missionObjectives[j]) - cConstant->missionObjectives[j].target);
     }
 
     //Get progress now that all of the outputs are ready

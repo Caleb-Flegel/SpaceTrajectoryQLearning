@@ -78,7 +78,7 @@ void output::printFinalGen(const cudaConstants * cConstants, const Child& curInd
 
       //TODO: Fix this here and in setting it up
       // Evaluate and print this solution's information to binary files
-//      trajectoryPrint(generation, cConstants, allAdults[0], gpuValues);
+  trajectoryPrint(generation, cConstants, bestInd);
   //}
 }
 
@@ -117,7 +117,7 @@ void output::initializeGenPerformance(const cudaConstants * cConstants) {
   //   excelFile << "avg" << cConstants->missionObjectives[i].name << ",";
   // }
   
-  excelFile << "bestProg,beststeps,bestalpha,bestbeta,bestzeta";
+  excelFile << "bestProg,beststeps,bestalpha,bestbeta,bestzeta,bestTripTime,";
   for (int i = 0; i < GAMMA_ARRAY_SIZE; i++) {
     excelFile << "bestgamma"; 
     if (i == 0) {
@@ -155,7 +155,7 @@ void output::initializeGenPerformance(const cudaConstants * cConstants) {
     }
   }
 
-  excelFile << "curProg,cursteps,curalpha,curbeta,curzeta";
+  excelFile << "curProg,cursteps,curalpha,curbeta,curzeta,curTripTime,";
   for (int i = 0; i < GAMMA_ARRAY_SIZE; i++) {
     excelFile << "curgamma"; 
     if (i == 0) {
@@ -309,14 +309,14 @@ void output::recordGenerationPerformance(const cudaConstants * cConstants, const
 
   //Output the best rank distance adult's parameters
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << best.getParameters(cConstants, cConstants->missionObjectives[i]) << ",";
+    excelFile << best.getParameters(cConstants->missionObjectives[i]) << ",";
   }
   //Output the best rank distance adult's differences
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
     excelFile << best.objTargetDiffs[i] << ",";
   }
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
-    excelFile << cur.getParameters(cConstants, cConstants->missionObjectives[i]) << ",";
+    excelFile << cur.getParameters(cConstants->missionObjectives[i]) << ",";
   }
   //Output the best rank distance adult's differences
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
@@ -328,6 +328,7 @@ void output::recordGenerationPerformance(const cudaConstants * cConstants, const
   excelFile << best.curParams.alpha << ",";
   excelFile << best.curParams.beta << ",";
   excelFile << best.curParams.zeta << ",";
+  excelFile << best.curParams.tripTime << ",";
   for (int i = GAMMA_OFFSET; i < GAMMA_ARRAY_SIZE + GAMMA_OFFSET; i++) {
     excelFile << best.curParams.coeff.gamma[i-GAMMA_OFFSET] << ","; 
   }
@@ -343,6 +344,7 @@ void output::recordGenerationPerformance(const cudaConstants * cConstants, const
   excelFile << cur.curParams.alpha << ",";
   excelFile << cur.curParams.beta << ",";
   excelFile << cur.curParams.zeta << ",";
+  excelFile << cur.curParams.tripTime << ",";
   for (int i = GAMMA_OFFSET; i < GAMMA_ARRAY_SIZE + GAMMA_OFFSET; i++) {
     excelFile << cur.curParams.coeff.gamma[i-GAMMA_OFFSET] << ","; 
   }
@@ -509,7 +511,7 @@ void output::reportRun(const cudaConstants* cConstants, const Child& best, const
 
   //For each objective, print the adult's parameter
   for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-    output << "," << best.getParameters(cConstants, cConstants->missionObjectives[j]);
+    output << "," << best.getParameters(cConstants->missionObjectives[j]);
   }
 
   //End line to move on to the next adult
@@ -520,7 +522,7 @@ void output::reportRun(const cudaConstants* cConstants, const Child& best, const
 
   //For each objective, print the adult's parameter
   for (int j = 0; j < cConstants->missionObjectives.size(); j++) {
-    output << "," << cur.getParameters(cConstants, cConstants->missionObjectives[j]);
+    output << "," << cur.getParameters(cConstants->missionObjectives[j]);
   }
 
   //End line to move on to the next adult
@@ -544,8 +546,6 @@ void output::reportRun(const cudaConstants* cConstants, const Child& best, const
   output.close();
 }
 
-
-/*
 // Main Output, final results of genetic algorithm
 void output::trajectoryPrint(int generation, const cudaConstants* cConstants, const Child& cur) {
   //set the target and inital conditions for the earth and spacecraft:
@@ -558,16 +558,22 @@ void output::trajectoryPrint(int generation, const cudaConstants* cConstants, co
 // setting the final position of Mars based on the landing date
   elements<double> mars = elements<double>(cConstants->r_fin_mars, cConstants->theta_fin_mars, cConstants->z_fin_mars, cConstants->vr_fin_mars, cConstants->vtheta_fin_mars, cConstants->vz_fin_mars);
 
-  // setting initial conditions of earth based off of the impact date (Sept 30, 2022) minus the trip time (optimized).
-  elements<double> earth =  launchCon->getCondition(best.startParams.tripTime);
-  
-  // setting initial conditions of the spacecraft
-  elements<double> spaceCraft = elements<double>(earth.r+ESOI*cos(best.startParams.alpha),
-                                                 earth.theta + asin(sin(M_PI-best.startParams.alpha)*ESOI/earth.r),
-                                                 earth.z,
-                                                 earth.vr + cos(best.startParams.zeta)*sin(best.startParams.beta)*cConstants->v_escape,
-                                                 earth.vtheta + cos(best.startParams.zeta)*cos(best.startParams.beta)*cConstants->v_escape,
-                                                 earth.vz + sin(best.startParams.zeta)*cConstants->v_escape);
+  //Create new dummy child from the best Child
+  rkParameters<double> bestParams = cur.curParams;
+  Child convergedChild = Child(cur.curState, cConstants);
+
+  //Get the child's run params
+  convergedChild.curParams = convergedChild.curState.getSimVal(cConstants);
+
+  elements<double> earth = launchCon->getCondition(convergedChild.curParams.tripTime); //get Earth's position and velocity at launch
+
+  convergedChild.curParams.y0 = elements<double>( // calculate the starting position and velocity of the spacecraft from Earth's position and velocity and spacecraft launch angles
+      earth.r+ESOI*cos(convergedChild.curParams.alpha),
+      earth.theta+asin(sin(M_PI-convergedChild.curParams.alpha)*ESOI/earth.r),
+      earth.z, // The spacecraft Individual is set to always be in-plane (no initial Z offset relative to earth) 
+      earth.vr+cos(convergedChild.curParams.zeta)*sin(convergedChild.curParams.beta)*cConstants->v_escape, 
+      earth.vtheta+cos(convergedChild.curParams.zeta)*cos(convergedChild.curParams.beta)*cConstants->v_escape,
+      earth.vz+sin(convergedChild.curParams.zeta)*cConstants->v_escape);
 
   //Calculate the maximum possible number of steps taken to make enough memory is allocated
   int numSteps = (cConstants->maxSimNum * (cConstants->max_numsteps + 1))+1;
@@ -590,48 +596,14 @@ void output::trajectoryPrint(int generation, const cudaConstants* cConstants, co
   Etot_avg = new double[numSteps];  // Initialize memory for average mechanical energy array
 
   //store the number of threads
-  const int numThreads = gpuValues.numThreads;
-  const int blockThreads = cConstants->thread_block_size;
+  // const int numThreads = gpuValues.numThreads;
+  // const int blockThreads = cConstants->thread_block_size;
 
-  //Create new dummy child from the best Adult
-  rkParameters<double> bestParams = best.startParams;
-  Child *convergedChild = new Child(bestParams, cConstants, best.birthday, best.avgParentProgress);
-
-  //Will simulate the best individual until they have completed their simulation
-  while ((*convergedChild).simStatus != COMPLETED_SIM) {
-
-    //Create CUDA event
-    cudaEvent_t kernelStart, kernelEnd;
-    cudaEventCreate(&kernelStart);
-    cudaEventCreate(&kernelEnd);
-
-    // copy values of parameters passed from host onto device
-    cudaMemcpy(gpuValues.devGeneration, convergedChild, sizeof(Child), cudaMemcpyHostToDevice);
-
-    //Run CUDA simulation
-    cudaEventRecord(kernelStart);
-    rk4CUDASim<<<(numThreads+blockThreads-1)/blockThreads,blockThreads>>>(gpuValues.devGeneration, gpuValues.devAbsTol, 1, gpuValues.devCConstant, gpuValues.devMarsLaunchCon, gpuValues.devTime_steps, gpuValues.devY_steps, gpuValues.devGamma_steps, gpuValues.devTau_steps, gpuValues.devAccel_steps, gpuValues.devFuel_steps);
-    cudaEventRecord(kernelEnd);
-
-    // copy the result of the kernel onto the host
-    cudaMemcpy(convergedChild, gpuValues.devGeneration, sizeof(Child), cudaMemcpyDeviceToHost);
-
-    //wait for CUDA sim to finish
-    float kernelT;   
-    cudaEventSynchronize(kernelEnd);
-    cudaEventElapsedTime(&kernelT, kernelStart, kernelEnd);
-  }
-
-  //Copy the step-by-step values off of the GPU
-  cudaMemcpy(times, gpuValues.devTime_steps, numSteps * sizeof(double), cudaMemcpyDeviceToHost);
-  cudaMemcpy(yp, gpuValues.devY_steps, numSteps * sizeof(elements<double>), cudaMemcpyDeviceToHost);
-  cudaMemcpy(gamma, gpuValues.devGamma_steps, numSteps * sizeof(double), cudaMemcpyDeviceToHost);
-  cudaMemcpy(tau, gpuValues.devTau_steps, numSteps * sizeof(double), cudaMemcpyDeviceToHost);
-  cudaMemcpy(accel_output, gpuValues.devAccel_steps, numSteps * sizeof(double), cudaMemcpyDeviceToHost);
-  cudaMemcpy(fuelSpent, gpuValues.devFuel_steps, numSteps * sizeof(double), cudaMemcpyDeviceToHost);
+  //Run simulation
+  callRK(convergedChild, cConstants->rk_tol, cConstants, marsLaunchCon->getAllPositions(), times, yp, gamma, tau, accel_output, fuelSpent, 0);
 
   // calculate the error in conservation of mechanical energy due to the thruster
-  errorCheck(times, yp, gamma, tau, static_cast<int>((*convergedChild).stepCount), accel_output, fuelSpent, wetMass, work, dE, Etot_avg, cConstants, marsIndex);
+  errorCheck(times, yp, gamma, tau, convergedChild.stepCount, accel_output, fuelSpent, wetMass, work, dE, Etot_avg, cConstants, marsIndex);
 
   //Get the seed for outputs
   int seed = cConstants->time_seed;
@@ -640,22 +612,22 @@ void output::trajectoryPrint(int generation, const cudaConstants* cConstants, co
   std::cout << "\nComparison\n";
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
       std::cout << "Main Run " << cConstants->missionObjectives[i].name << ": ";
-      std::cout << best.getParameters(cConstants->missionObjectives[i]) << "\n";
+      std::cout << cur.getParameters(cConstants->missionObjectives[i]) << "\n";
   }
-  std::cout << "Main Run steps: " << best.stepCount << "\n\n";
+  std::cout << "Main Run steps: " << cur.stepCount << "\n\n";
 
   //Get equivalent outputs for convergedChild
-  (*convergedChild).getPosDiff(cConstants);
-  (*convergedChild).getSpeedDiff(cConstants);
-  (*convergedChild).getOrbitPosDiff(cConstants);
-  (*convergedChild).getOrbitSpeedDiff(cConstants);
+  convergedChild.getPosDiff(cConstants);
+  convergedChild.getSpeedDiff(cConstants);
+  convergedChild.getOrbitPosDiff(cConstants);
+  convergedChild.getOrbitSpeedDiff(cConstants);
 
   //Outputting equivalent outputs
   for (int i = 0; i < cConstants->missionObjectives.size(); i++) {
       std::cout << "Bin Run " << cConstants->missionObjectives[i].name << ": ";
-      std::cout << (*convergedChild).getParameters(cConstants->missionObjectives[i]) << "\n";
+      std::cout << convergedChild.getParameters(cConstants->missionObjectives[i]) << "\n";
   }
-  std::cout << "Bin Run steps: " << (*convergedChild).stepCount << "\n\n";
+  std::cout << "Bin Run steps: " << convergedChild.stepCount << "\n\n";
 
   // OUTDATED SINCE 2023
   // This function is used to compare the final best thread with other runs
@@ -673,7 +645,7 @@ void output::trajectoryPrint(int generation, const cudaConstants* cConstants, co
   output.open(outputPath + "orbitalMotion-"+std::to_string(seed)+".bin", std::ios::binary);
 
   // Output this thread's data at each time step
-  for(int i = 0; i <= (*convergedChild).stepCount; i++) {
+  for(int i = 0; i <= convergedChild.stepCount; i++) {
     output.write((char*)&yp[i], sizeof (elements<double>));
     output.write((char*)&times[i], sizeof (double));
     output.write((char*)&gamma[i], sizeof (double));
@@ -728,21 +700,21 @@ void output::trajectoryPrint(int generation, const cudaConstants* cConstants, co
 
   // Optimized starting parameters
   for (int i = 0; i < GAMMA_ARRAY_SIZE; i++) {
-    output.write((char*)&best.startParams.coeff.gamma[i], sizeof (double));
+    output.write((char*)&cur.curParams.coeff.gamma[i], sizeof (double));
   }
   for (int i = 0; i < TAU_ARRAY_SIZE; i++) {
-    output.write((char*)&best.startParams.coeff.tau[i], sizeof (double)); 
+    output.write((char*)&cur.curParams.coeff.tau[i], sizeof (double)); 
   }
-  output.write((char*)&best.startParams.alpha, sizeof (double));
-  output.write((char*)&best.startParams.beta, sizeof (double));
-  output.write((char*)&best.startParams.zeta, sizeof (double));
-  output.write((char*)&best.startParams.tripTime, sizeof (double));
+  output.write((char*)&cur.curParams.alpha, sizeof (double));
+  output.write((char*)&cur.curParams.beta, sizeof (double));
+  output.write((char*)&cur.curParams.zeta, sizeof (double));
+  output.write((char*)&cur.curParams.tripTime, sizeof (double));
   for (int i = 0; i < COAST_ARRAY_SIZE; i++) {
-    output.write((char*)&best.startParams.coeff.coast[i], sizeof (double));
+    output.write((char*)&cur.curParams.coeff.coast[i], sizeof (double));
   }
 
   //Matlab can only take in one data type when pulling in the data, so beacuse everything else is a double, step counts need to be too
-  double lastStepDouble = static_cast<double>((*convergedChild).stepCount);
+  double lastStepDouble = static_cast<double>(convergedChild.stepCount);
   
   // Number of steps taken in final RK calculation
   output.write((char*)&lastStepDouble, sizeof (double));
@@ -795,7 +767,7 @@ void output::errorCheck(double *time, elements<double> *yp,  double *gamma,  dou
   delete [] mass;
   delete [] Etot;
 }
-*/
+
 void output::recordEarthData(const cudaConstants * cConstants, const int & generation) {
   double timeStamp = cConstants->minSimVals[TRIPTIME_OFFSET]; // Start the timeStamp at the triptime min (closest to impact)
   // seed to hold time_seed value to identify the file
@@ -920,7 +892,7 @@ void terminalDisplay(const Child& individual, const std::vector<objective> objec
   //Print the parameters for each of the objectives for the passed in individual
   for (int i = 0; i < objectives.size(); i++) {
     //Print the name and value of the data of the objective
-    std::cout << "\n\t" << objectives[i].name << ": " << individual.getParameters(cConstants, objectives[i]);
+    std::cout << "\n\t" << objectives[i].name << ": " << individual.getParameters(objectives[i]);
 
     //Print the difference
     std::cout << "\n\t\t" << "Diff. from target: " << individual.objTargetDiffs[i];

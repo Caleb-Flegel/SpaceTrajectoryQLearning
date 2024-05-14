@@ -120,7 +120,7 @@ struct Child {
     // Inputs: requestObjective - the objective which will be used to grab the right parameter from the child
     // Output: the parameter that is relevent to the objective
     //              Could be posDiff, fuelSpent, tripTime, etc
-    double getParameters (const cudaConstants* cConstants, const objective & requestObjective) const;
+    double getParameters (const objective & requestObjective) const;
 
     // Calculates a posDiff value
     // Input: cConstants in accessing properties for the final position of the target (such as r_fin_target, theta_fin_target, and z_fin_target)
