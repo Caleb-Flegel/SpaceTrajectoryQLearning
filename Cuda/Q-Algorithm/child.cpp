@@ -320,8 +320,8 @@ void Child::getProgress(const cudaConstants* cConstants){
         progress = calcProgress;
     }
     else {
-        //Set the progress to 0 if the individual has an error
-        progress = 0; 
+        //Set the progress to -1 if the individual has an error
+        progress = -1; 
     }
 }
 

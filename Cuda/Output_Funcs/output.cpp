@@ -888,11 +888,19 @@ void printIndividual(const cudaConstants* cConstants, const Child& ind, const in
 
 // Utility function to display the currently best individual onto the terminal while the algorithm is still running
 void terminalDisplay(const Child& individual, const std::vector<objective> objectives, const cudaConstants* cConstants) {
+
+  std::cout << "\nState increment params:\n";
+  for (int i = 0; i < individual.curState.stateParams.size(); i++){
+    std::cout << individual.curState.stateParams[i] << "\t";
+  }
+
+  std::cout << "\nState increment params:\n";
+  std::cout << individual.curParams;
     
   //Print the parameters for each of the objectives for the passed in individual
   for (int i = 0; i < objectives.size(); i++) {
     //Print the name and value of the data of the objective
-    std::cout << "\n\t" << objectives[i].name << ": " << individual.getParameters(objectives[i]);
+    std::cout << "\n\n\t" << objectives[i].name << ": " << individual.getParameters(objectives[i]);
 
     //Print the difference
     std::cout << "\n\t\t" << "Diff. from target: " << individual.objTargetDiffs[i];

@@ -31,6 +31,13 @@
 bool checkTolerance(const Child& ind, const cudaConstants* cConstants);
 
 //----------------------------------------------------------------------------------------------------------------------------
+// Adjusts epsilon based on how many generations have passed and sets the 
+// void resetAndAdjustEps(const int generation, State& bestState, State& curState);
+
+//Calculates the new epsilon value
+double newEpsilon(const cudaConstants* cConstants, const int& generation);
+
+//----------------------------------------------------------------------------------------------------------------------------
 // TEST / LIKELY TEMPORARY FUNCTION
 // This function will find the minimum, maximum, and average distance, average pos and speed diffs, the number of duplicates,
 //                         the avg age, and the avg and max birthdays of the individuals in allAdults, which will then be used for reporting
@@ -237,9 +244,19 @@ bool checkTolerance(const Child& ind, const cudaConstants* cConstants) {
     
 // }
 
+//Calculates the new epsilon value
+double newEpsilon(const cudaConstants* cConstants, const int& generation) {
+    // Get run progress fraction
+    double runProg = generation/cConstants->max_generations;
+
+    // Calculate the new epsilon
+    double epsilonAddVal = abs(cConstants->epsilon_Final - cConstants->epsilon_Initial) * runProg;
+    return cConstants->epsilon_Final - epsilonAddVal;
+}
+
 //Function that gets a new state for the individual
 //  Compares all possible actions and randomly chooses either a random action or the best action and returns the new state based on that action
-std::vector<int> getNextState(const cudaConstants* cConstants, Child & ind, std::mt19937_64 & rng) {
+std::vector<int> getNextState(const cudaConstants* cConstants, Child & ind, std::mt19937_64 & rng, const double& curEpsilon) {
     //Get possible actions
     std::vector<std::string> possActions = ind.curState.getPossibleActions(cConstants);
 
@@ -250,7 +267,14 @@ std::vector<int> getNextState(const cudaConstants* cConstants, Child & ind, std:
 
     //Fill the nextstates vector based on the possible actions
     for (int i = 0; i < possActions.size(); i++){
-        nextStates.push_back(ind.curState.getNewState(possActions[i]));
+        std::vector<int> nextState = ind.curState.getNewState(possActions[i]);
+        nextStates.push_back(nextState);
+
+        // Check to see if this state has been tested yet
+        if (ind.curState.values[nextState] == 0) {
+            // Set to the initial value
+            ind.curState.values[nextState] = cConstants->initialValue;
+        } 
     }
 
     //Array which will hold the output state
@@ -260,7 +284,7 @@ std::vector<int> getNextState(const cudaConstants* cConstants, Child & ind, std:
     float stateType = rng() / rng.max();
 
     //See if the next state should be a random or best state
-    if (stateType > cConstants->epsilon){
+    if (stateType > curEpsilon){
         //Get the max value state
         //index with the max nextState val
         int max = 0;
@@ -292,7 +316,7 @@ std::vector<int> getNextState(const cudaConstants* cConstants, Child & ind, std:
 //prevState is basically the key for the previous state
 void update_q_values(const cudaConstants* cConstants, Child & ind, const std::vector<int>& prevState){
     //we want the reward to be how close to the target the individual is
-    double reward = ind.progress;
+    double reward = ind.progress + cConstants->livingReward;
 
     //sample = reward + self.discount *self.getValue(nextState);
 
@@ -371,6 +395,9 @@ double optimize(const cudaConstants* cConstants) {
     //      these adults are either randomly generated or pulled from a file
     // createFirstGeneration(oldAdults, cConstants, rng, generation, gpuValues, refPoints); 
 
+    //Cur epsilon value
+    double curEpsilon = .5;
+
     //TODO (DONE): Generate initial state here
     //Generate initial state
     //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE INIT State-_-_-_-_-_-_-_-_-_\n\n";
@@ -385,6 +412,9 @@ double optimize(const cudaConstants* cConstants) {
     // main gentic algorithm loop
     // - continues until checkTolerance returns true (specific number of individuals are within threshold)
     do {
+
+        //Get new epsilon
+        curEpsilon = newEpsilon(cConstants, generation);
 
         // std::cout << "\nINCOMING STATE:\n";
         // for (int i = 0; i < individual.curState.stateParams.size(); i++){
@@ -401,7 +431,7 @@ double optimize(const cudaConstants* cConstants) {
 
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE New State-_-_-_-_-_-_-_-_-_\n\n";
         //TODO: use function to get possible actions then get the value of the adjacent actions
-        std::vector<int> newState = getNextState(cConstants, individual, rng);
+        std::vector<int> newState = getNextState(cConstants, individual, rng, curEpsilon);
 
         //std::cout << "\n\n_-_-_-_-_-_-_-_-_-TEST: PRE Assign New State-_-_-_-_-_-_-_-_-_\n\n";
         //Save the previous state and update the child's state with the new state
@@ -484,7 +514,14 @@ double optimize(const cudaConstants* cConstants) {
         convergence = checkTolerance(individual, cConstants); //QL: done
 
         //Reset the progress sort from checkTolerance
-        //mainSort(oldAdults, cConstants, oldAdults.size());      
+        //mainSort(oldAdults, cConstants, oldAdults.size());   
+
+        //Reset if the answer hasn't been found
+        if (!convergence && (generation % cConstants->resetGenNum) == 0){
+            //Set the individual's state params to the best individual's params
+            std::cout << "\nState Reset!\n";
+            individual.curState.stateParams = bestIndividual.curState.stateParams;
+        }   
         
         //Increment the generation counter
         ++generation;

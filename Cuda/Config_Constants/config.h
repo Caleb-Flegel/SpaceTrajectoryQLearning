@@ -33,11 +33,19 @@ struct cudaConstants {
 
     // double mutation_amplitude; // Percentage for probability of mutating a gene in a new individual, called iteratively to mutate more genes until the check fails
 
+    //The number of generations before resetting to the best individual
+    int resetGenNum;
+
     // Scalars used to modify the mutate_scales below, used to assist in making adults mutate more if needed
     // A value of 1 will have an individual's parameters mutate at the scale of the variables below
     double alpha; //learning rate
-    double epsilon; //exploration probability
+    double epsilon_Initial; //start exploration probability
+    // double curEpsilon; //current exploration probablility
+    double epsilon_Final; //end exploration probability
     double gamma; //discount
+
+    double livingReward;
+    double initialValue;
 
     // The number of breaks between the minimum and maximum values
     int num_increments; 

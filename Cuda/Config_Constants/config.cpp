@@ -221,14 +221,28 @@ void cudaConstants::FileRead(std::string fileName) {
                     //         std::cout << "\nAlgorithm selection unidentified\n";
                     //     }
                     // }
+                    else if (variableName == "resetGenNum") {
+                        this->resetGenNum = std::stoi(variableValue);
+                    }
+
                     else if (variableName == "alpha") {
                         this->alpha = std::stod(variableValue);
                     }
-                    else if (variableName == "epsilon") {
-                        this->epsilon = std::stod(variableValue);
+                    else if (variableName == "epsilon_Initial") {
+                        this->epsilon_Initial = std::stod(variableValue);
+                    }
+                    else if (variableName == "epsilon_Final") {
+                        this->epsilon_Final = std::stod(variableValue);
                     }
                     else if (variableName == "gamma") {
                         this->gamma = std::stod(variableValue);
+                    }
+
+                    else if (variableName == "livingReward") {
+                        this->livingReward = std::stod(variableValue);
+                    }
+                    else if (variableName == "initialValue") {
+                        this->initialValue = std::stod(variableValue);
                     }
 
                     else if (variableName == "num_increments") {
@@ -639,8 +653,9 @@ std::ostream& operator<<(std::ostream& os, const cudaConstants& object) {
     os << "Q Algorithm Related Values:\n";
     os << "\ttime_seed: "       << object.time_seed       << "\n";
     os << "\tmax_generations: "  << object.max_generations   << "\trun_count: "          << object.run_count         << "\n\n";
-    os << "\tnum_increments: " << object.num_increments << "\n\n";
-    os << "\talpha: " << object.alpha << "\tepsilon: " << object.epsilon << "\tgamma: " << object.gamma << "\n\n"; 
+    os << "\tnum_increments: " << object.num_increments << "\treset_generations: " << object.resetGenNum << "\n\n";
+    os << "\talpha: " << object.alpha << "\tInit_epsilon: " << object.epsilon_Initial << "\tFinal_epsilon: " << object.epsilon_Final << "\tgamma: " << object.gamma << "\n\n"; 
+    os << "\tLiving_reward: " << object.livingReward << "\tinital_State_Val: " << object.initialValue << "\n\n";
 
     os << "Runge-Kutta Related Values:\n";
     os << "\trk_tol: "       << object.rk_tol       << "\tdoublePrecThresh: " << object.doublePrecThresh << "\ttimeRes: "   << object.timeRes    << "\n";
